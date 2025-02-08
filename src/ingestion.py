@@ -16,6 +16,7 @@ def fetchStock(ticker, tperiod):
     plt.tight_layout()
     plt.savefig(f'./data/raw/{ticker}_{tperiod}.png')
     plt.close()
+    return tickerData
 
 
 fetchStock(ticker, period)
