@@ -1,8 +1,6 @@
-import pandas
 import numpy
 
-def addFeatures(filePath):
-    data = pandas.read_csv(filePath, header=0, parse_dates=True)
+def addFeatures(data, ticker, tperiod, tinterval):
 
     data["priceChange"] = data["Close"].pct_change()*100
     data["ma10"] = data["Close"].rolling(window=10).mean()
@@ -42,7 +40,6 @@ def addFeatures(filePath):
     #add sentiment analysis results here
 
     data = data.fillna(0) #ensure no empty values
-    data.to_csv(filePath, index=False)
+    data.to_csv(f'./data/processed/{ticker}_{tperiod}_{tinterval}.csv', index=False)
+    return data
 
-
-addFeatures(".\\data\\processed\\AAPL_5y_1d.csv")
