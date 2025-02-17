@@ -21,7 +21,5 @@ def fetchStock(ticker, tperiod, tinterval):
         plt.close()
     else:
         print(f"No data downloaded for ticker: {ticker}")
-    return tickerData
+    return tickerData, ticker, tperiod, tinterval
 
-
-fetchStock(ticker, period, interval)

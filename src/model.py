@@ -50,5 +50,3 @@ def trainLightGBM(data, dayTarget, testSize, seed):
     print(futurepred)
     print("Error:")
     print(numpy.sqrt(sklM.mean_squared_error(YTest, predLgb)))
-
-trainLightGBM(data, 1, 0.2, 51256)
