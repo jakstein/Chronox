@@ -1,7 +1,7 @@
-import numpy
+import numpy, pandas
 
 def addFeatures(data, ticker, tperiod, tinterval):
-
+    data = pandas.read_csv(f'./data/processed/{ticker}_{tperiod}_{tinterval}.csv', header=0, parse_dates=True)
     data["priceChange"] = data["Close"].pct_change()*100
     data["ma10"] = data["Close"].rolling(window=10).mean()
     data["ma50"] = data["Close"].rolling(window=50).mean()
@@ -26,7 +26,7 @@ def addFeatures(data, ticker, tperiod, tinterval):
 
     data["volma10"] = data["Volume"].rolling(10).mean()
 
-    data["OBV"] = (numpy.sign(data["Close"].diff()) * data["Volume"]).where(data["Close"].diff() != 0).fillna(0).cumsum() #doublecheck, weird results
+    #data["OBV"] = (numpy.sign(data["Close"].diff()) * data["Volume"]).where(data["Close"].diff() != 0).fillna(0).cumsum() #doublecheck, weird results
 
     RSIdelta = data["Close"].diff()
     RSIgain = RSIdelta.where(RSIdelta > 0,0)
@@ -41,5 +41,4 @@ def addFeatures(data, ticker, tperiod, tinterval):
 
     data = data.dropna() #ensure no empty values
     data.to_csv(f'./data/processed/{ticker}_{tperiod}_{tinterval}.csv', index=False)
-    return data, ticker, tperiod, tinterval
 

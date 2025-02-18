@@ -7,4 +7,4 @@ def loadData(filePath):
     name_without_ext = os.path.splitext(filename)[0]
     ticker, tperiod, tinterval = name_without_ext.split('_')
     data = pandas.read_csv(filePath, header=0, parse_dates=True)
-    return data, ticker, tperiod, tinterval
+    return data

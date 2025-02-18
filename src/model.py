@@ -3,12 +3,9 @@ from sklearn import model_selection as sklS
 from sklearn import metrics as sklM
 import utils
 
-data = utils.loadData("data\processed\AAPL_5y_1d.csv")[0]
 
-
-
-def trainXGBoost(data, dayTarget, testSize, seed):
-
+def trainXGBoost(data, ticker, tperiod, tinterval, dayTarget, testSize, seed):
+    data = pandas.read_csv(f'./data/processed/{ticker}_{tperiod}_{tinterval}.csv', header=0, parse_dates=True)    
     if dayTarget > 0:
         data["Target"] = data["Close"].shift(-dayTarget)
         data = data.dropna(subset=["Target"]) #remove the empty fields from shifted values
