@@ -4,7 +4,7 @@ from sklearn import metrics as sklM
 import utils
 
 
-def trainXGBoost(data, ticker, tperiod, tinterval, dayTarget, testSize, seed):
+def trainXGBoost(data, ticker, tperiod, tinterval, dayTarget, testSize):
     data = pandas.read_csv(f'./data/processed/{ticker}_{tperiod}_{tinterval}.csv', header=0, parse_dates=True)    
     if dayTarget > 0:
         data["Target"] = data["Close"].shift(-dayTarget)
@@ -15,9 +15,9 @@ def trainXGBoost(data, ticker, tperiod, tinterval, dayTarget, testSize, seed):
     y = data["Target"]
     x = data.drop(columns=["Price", "Target"])
 
-    XTrain, XTest, YTrain, YTest = sklS.train_test_split(x, y, test_size=testSize, random_state=seed, shuffle=False)
+    XTrain, XTest, YTrain, YTest = sklS.train_test_split(x, y, test_size=testSize, shuffle=False)
 
-    xgbModel = xgboost.XGBRegressor(objective="reg:squarederror", learning_rate=0.05, n_estimators=200, seed=seed) #adjust estimators
+    xgbModel = xgboost.XGBRegressor(objective="reg:squarederror", learning_rate=0.05, n_estimators=200) #adjust estimators
     xgbModel.fit(XTrain, YTrain)
     predXgb = xgbModel.predict(XTest)
     futurefeatures = x.iloc[[-1]]

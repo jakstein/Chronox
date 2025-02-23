@@ -28,6 +28,8 @@ def addFeatures(data, ticker, tperiod, tinterval):
 
     #data["OBV"] = (numpy.sign(data["Close"].diff()) * data["Volume"]).where(data["Close"].diff() != 0).fillna(0).cumsum() #doublecheck, weird results
 
+    data["timeFeature"] = numpy.linspace(0, 1, len(data))
+
     RSIdelta = data["Close"].diff()
     RSIgain = RSIdelta.where(RSIdelta > 0,0)
     RSIloss = -RSIdelta.where(RSIdelta < 0,0)
