@@ -50,6 +50,10 @@ async def help_stock(ctx):
    - test_size: Test size ratio (default: 0.2)
 
 `!predict_lightgbm <ticker> [period] [interval] [days_ahead] [test_size]` - Get LightGBM prediction
+
+`!predict_prophet <ticker> [period] [interval] [days_ahead] [test_size]` - Get Prophet prediction
+   - days_ahead: Days to predict ahead (default: 30)
+   - test_size: Test size ratio (default: 0.2)
     """
     await ctx.send(help_text)
 
@@ -247,6 +251,56 @@ async def predict_lightgbm(ctx, ticker=None, period=None, interval=None, days_ah
         # format the prediction message
         prediction_msg = f"""
 **LightGBM Prediction for {result['ticker']}**
+- Period: {result['period']}, Interval: {result['interval']}
+- Last Close Price: ${result['last_close']:.2f}
+- Predicted Price ({days_ahead} days ahead): ${result['prediction']:.2f}
+- Change: ${(result['prediction'] - result['last_close']):.2f} ({((result['prediction'] / result['last_close'] - 1) * 100):.2f}%)
+- Model Error (RMSE): {result['error']:.4f}
+"""
+        await ctx.send(prediction_msg)
+        
+    except Exception as e:
+        await ctx.send(f"Error making prediction: {str(e)}")
+
+@bot.command(name='predict_prophet')
+async def predict_prophet(ctx, ticker=None, period=None, interval=None, days_ahead=30, test_size=0.2):
+    """Get Prophet prediction for the given stock"""
+    ticker = ticker or default_ticker
+    period = period or default_period
+    interval = interval or default_interval
+
+    # Validate arguments
+    valid, error_msg = validate_args(period, interval)
+    if not valid:
+        await ctx.send(f"❌ {error_msg}")
+        return
+
+    try:
+        days_ahead = int(days_ahead)
+        test_size = float(test_size)
+        
+        # Always fetch fresh data
+        await ctx.send(f"Fetching latest {ticker} data...")
+        ingestion.fetchStock(ticker, period, interval)
+        
+        # Process the data
+        raw_path = f'./data/raw/{ticker}_{period}_{interval}.csv'
+        processed_path = f'./data/processed/{ticker}_{period}_{interval}.csv'
+        
+        await ctx.send("Processing data with features...")
+        data = utils.loadData(raw_path)
+        data = preprocessing.cleanData(data, ticker, period, interval)
+        data = processing.addFeatures(data, ticker, period, interval)
+        
+        data = pd.read_csv(processed_path)
+        
+        # run prediction
+        await ctx.send(f"Running Prophet prediction for {ticker}, {days_ahead} days ahead...")
+        result = model.trainProphet(data, ticker, period, interval, days_ahead, test_size, return_result=True)
+        
+        # format the prediction message
+        prediction_msg = f"""
+**Prophet Prediction for {result['ticker']}**
 - Period: {result['period']}, Interval: {result['interval']}
 - Last Close Price: ${result['last_close']:.2f}
 - Predicted Price ({days_ahead} days ahead): ${result['prediction']:.2f}
