@@ -1,0 +1,9 @@
+yfinance
+pandas
+numpy
+matplotlib
+xgboost
+lightgbm
+scikit-learn
+discord.py
+pillow

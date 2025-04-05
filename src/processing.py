@@ -42,5 +42,5 @@ def addFeatures(data, ticker, tperiod, tinterval):
     #add sentiment analysis results here
 
     data = data.dropna() #ensure no empty values
-    data.to_csv(f'./data/processed/{ticker}_{tperiod}_{tinterval}.csv', index=False)
+    data.to_csv(f'./data/processed/{ticker}_{tperiod}_{tinterval}.csv', index=False, mode='w')
 

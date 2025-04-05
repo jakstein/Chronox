@@ -8,7 +8,7 @@ interval = "1d"
 def fetchStock(ticker, tperiod, tinterval):
     tickerData = yf.download(ticker, period=tperiod, interval=tinterval)
     if not tickerData.empty:
-        tickerData.to_csv(f'./data/raw/{ticker}_{tperiod}_{tinterval}.csv')
+        tickerData.to_csv(f'./data/raw/{ticker}_{tperiod}_{tinterval}.csv', mode='w')
         plt.figure(figsize=(10, 5))
         plt.plot(tickerData.index, tickerData['Close'], label='Close Price')
         plt.plot(tickerData.index, tickerData['Open'], label='Open Price')
@@ -21,4 +21,3 @@ def fetchStock(ticker, tperiod, tinterval):
         plt.close()
     else:
         print(f"No data downloaded for ticker: {ticker}")
-    

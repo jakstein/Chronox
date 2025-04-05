@@ -1,0 +1,18 @@
+{
+    "mode": "discord",
+    "discord": {
+        "token": "MTM1NzA4ODAyMDEzMzcxMTkxNQ.GlEHxS.bH69og5qhwlyfsHdztgIHKhZfbZyhy5xiJJQu0",
+        "command_prefix": "!"
+    },
+    "default_stock": {
+        "ticker": "AAPL",
+        "period": "1y",
+        "interval": "1d"
+    },
+    "allowed_arguments": {
+        "intervals": ["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo", "3mo"],
+        "periods": ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"],
+        "long_periods": ["1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"],
+        "short_intervals": ["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h"]
+    }
+}
