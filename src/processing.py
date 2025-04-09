@@ -1,4 +1,5 @@
 import numpy, pandas
+import news
 
 def addFeatures(data, ticker, tperiod, tinterval):
     data = pandas.read_csv(f'./data/processed/{ticker}_{tperiod}_{tinterval}.csv', header=0, parse_dates=True)
@@ -39,8 +40,9 @@ def addFeatures(data, ticker, tperiod, tinterval):
     RSI = RSIavgGain/RSIavgLoss
     data["RSI"] = 100-(100/(1+RSI))
 
-    #add sentiment analysis results here
 
     data = data.dropna() #ensure no empty values
     data.to_csv(f'./data/processed/{ticker}_{tperiod}_{tinterval}.csv', index=False, mode='w')
+    
+    return data
 

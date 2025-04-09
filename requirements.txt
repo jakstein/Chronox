@@ -7,3 +7,6 @@ lightgbm
 scikit-learn
 discord.py
 pillow
+pytickertick
+vaderSentiment
+prophet

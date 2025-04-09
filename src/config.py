@@ -1,7 +1,7 @@
 import json
 import os
 
-def load_config():
+def loadConfig():
     config_path = os.path.join(os.path.dirname(__file__), '..', 'config.json')
     
     try:
@@ -12,7 +12,7 @@ def load_config():
     except json.JSONDecodeError:
         print(f"Error parsing config file at {config_path}. Using default configuration.")
     
-    # Default config as fallback
+    # default config as fallback
     return {
         "mode": "standalone",
         "discord": {
@@ -24,6 +24,12 @@ def load_config():
             "period": "1y",
             "interval": "1d"
         },
+        "news_sentiment": {
+            "enabled": True,
+            "storiesCount": 20,
+            "daysLookback": 7,
+            "sentiment_impact_weight": 0.5
+        },
         "allowed_arguments": {
             "intervals": ["1d", "5d", "1wk", "1mo"],
             "periods": ["1mo", "3mo", "6mo", "1y", "5y", "max"],
@@ -32,10 +38,9 @@ def load_config():
         }
     }
 
-def validate_args(period, interval, config=None):
-    """Validate if period and interval are in the allowed lists"""
+def validateArgs(period, interval, config=None):
     if config is None:
-        config = load_config()
+        config = loadConfig()
         
     allowed_args = config.get('allowed_arguments', {})
     allowed_intervals = allowed_args.get('intervals', [])
@@ -49,7 +54,7 @@ def validate_args(period, interval, config=None):
     if interval and interval not in allowed_intervals:
         return False, f"Invalid interval: '{interval}'. Allowed intervals are: {', '.join(allowed_intervals)}"
     
-    # Check for incompatible period-interval combinations
+    # check for incompatible period-interval combinations
     if period in long_periods and interval in short_intervals:
         return False, f"Short intervals ({', '.join(short_intervals)}) are not allowed with long periods ({', '.join(long_periods)}). Please select a longer interval (e.g., 1d, 5d, 1wk, 1mo)."
     
