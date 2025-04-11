@@ -411,15 +411,24 @@ async def get_news(ctx, ticker=None, count=5):
         
         news_msg = f"**Najnowsze wiadomości dla {ticker.upper()}**\n\n"
         
+        # if more than 1 story, multiple messages
         for i, story in enumerate(stories, 1):
             time_str = story['time'].strftime('%Y-%m-%d %H:%M:%S UTC')
             title = story.get('title', 'Brak dostępnego tytułu')
+            description = story.get('description', 'Brak dostępnego opisu')
             source = story.get('site', 'Nieznane źródło')
             url = story.get('url', '')
+            sentiment = news.analyze_sentiment([story])
+            
+            news_msg = ""
+            if len(stories) == 1:
+                news_msg += f"**Latest News for {ticker.upper()}**\n\n"
             
             news_msg += f"**{i}. {title}**\n"
+            news_msg += f"{description}\n"
+            news_msg += f"Sentyment: {sentiment['compoundAvg']:.4f}\n"
             news_msg += f"Źródło: {source} | {time_str}\n"
-            news_msg += f"Link: {url}\n\n"
+            news_msg += f"Link: {url}"
             
             # limit znaków Discorda (2000)
             if len(news_msg) > 1800 and i < len(stories):
@@ -428,7 +437,8 @@ async def get_news(ctx, ticker=None, count=5):
         
         if news_msg:
             await ctx.send(news_msg)
-            
+        sentiment = news.analyze_sentiment(stories)
+        await ctx.send(f"Sentyment: {sentiment['positiveRatio']:.2%} Pozytywny | {sentiment['negativeRatio']:.2%} Negatywny | {sentiment['neutralRatio']:.2%} Neutralny\n")
     except Exception as e:
         await ctx.send(f"Błąd podczas pobierania wiadomości: {str(e)}")
 @bot.command(name='prune')
