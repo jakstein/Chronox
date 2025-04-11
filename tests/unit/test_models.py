@@ -149,7 +149,9 @@ class TestProphetModel:
         mock_adjust.return_value = adjusted_prediction
         
         # Call the function with return_result=True
-        with patch('prophet.Prophet.fit'), patch('pandas.Series.iloc', return_value=last_close):
+        with patch('prophet.Prophet.fit') as mock_fit, patch('pandas.Series.iloc', return_value=last_close), \
+             patch('pandas.Series.diff', return_value=pd.Series([pd.Timedelta(days=1)])):
+            mock_fit.return_value = None
             result = model.trainProphet(
                 processed_stock_data, ticker, period, interval, day_target, test_size, return_result=True
             )

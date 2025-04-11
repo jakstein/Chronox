@@ -63,7 +63,7 @@ def processed_stock_data():
 def mock_config():
     """Create a mock configuration for testing"""
     return {
-        "mode": "standalone",
+        "mode": "discord",
         "discord": {
             "token": "test_token",
             "command_prefix": "!"

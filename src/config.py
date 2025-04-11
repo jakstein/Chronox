@@ -11,10 +11,9 @@ def loadConfig():
         print(f"Config file not found at {config_path}. Using default configuration.")
     except json.JSONDecodeError:
         print(f"Error parsing config file at {config_path}. Using default configuration.")
-    
-    # default config as fallback
+      # default config as fallback
     return {
-        "mode": "standalone",
+        "mode": "discord",
         "discord": {
             "token": os.getenv("DISCORD_TOKEN", ""),
             "command_prefix": "!"

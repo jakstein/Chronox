@@ -22,9 +22,7 @@ class TestConfigLoading:
         assert 'mode' in result
         assert 'discord' in result
         assert 'default_stock' in result
-        
-    @patch('os.path.dirname')
-    @patch('builtins.open')
+
     def test_load_config_file_not_found(self, mock_file, mock_dirname):
         """Test fallback to default config when file not found"""
         # Setup mock to raise FileNotFoundError
@@ -37,11 +35,10 @@ class TestConfigLoading:
         # Verify default config is returned
         assert isinstance(result, dict)
         assert 'mode' in result
+        assert result['mode'] == 'discord'  # Verify mode is discord
         assert 'discord' in result
         assert 'default_stock' in result
         
-    @patch('os.path.dirname')
-    @patch('builtins.open')
     def test_load_config_invalid_json(self, mock_file, mock_dirname):
         """Test fallback to default config when JSON is invalid"""
         # Setup mock to return invalid JSON
@@ -55,6 +52,7 @@ class TestConfigLoading:
         # Verify default config is returned
         assert isinstance(result, dict)
         assert 'mode' in result
+        assert result['mode'] == 'discord'  # Verify mode is discord
         assert 'discord' in result
         assert 'default_stock' in result
 

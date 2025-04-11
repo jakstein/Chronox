@@ -14,7 +14,13 @@ class TestStockDataPipeline:
     @patch('yfinance.download')
     @patch('matplotlib.pyplot.savefig')
     @patch('matplotlib.pyplot.close')
-    def test_full_data_pipeline(self, mock_close, mock_savefig, mock_yf_download, processed_stock_data, tmp_path):
+    @patch('matplotlib.pyplot.figure')
+    @patch('matplotlib.pyplot.plot')
+    @patch('matplotlib.pyplot.title')
+    @patch('matplotlib.pyplot.xlabel')
+    @patch('matplotlib.pyplot.ylabel')
+    @patch('matplotlib.pyplot.tight_layout')
+    def test_full_data_pipeline(self, mock_tight_layout, mock_ylabel, mock_xlabel, mock_title, mock_plot, mock_figure, mock_close, mock_savefig, mock_yf_download, processed_stock_data, tmp_path):
         """Test the full data pipeline from ingestion to prediction"""
         # Setup test data
         ticker = "AAPL"
