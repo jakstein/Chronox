@@ -34,7 +34,7 @@ class TestXGBoostModel:
         
         # Mock XGBoost model
         mock_model = MagicMock()
-        mock_model.predict.return_value = np.array([prediction])
+        mock_model.predict.return_value = np.array([prediction] * len(x_test))
         mock_xgb.return_value = mock_model
         
         # Mock sentiment data
@@ -88,7 +88,7 @@ class TestLightGBMModel:
         
         # Mock LightGBM model
         mock_model = MagicMock()
-        mock_model.predict.return_value = np.array([prediction])
+        mock_model.predict.return_value = np.array([prediction] * len(x_test))
         mock_lgbm.return_value = mock_model
         
         # Mock sentiment data
