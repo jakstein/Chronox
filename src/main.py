@@ -4,6 +4,12 @@ import shutil
 from discord_bot import runDiscordBot
 from config import loadConfig
 
+# UTF-8 dla znaków polskich
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr = open(sys.stderr.fileno(), mode='w', encoding='utf-8', buffering=1)
+
 if __name__ == "__main__":
     # wczytaj konfigurację
     config = loadConfig()
