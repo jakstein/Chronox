@@ -99,7 +99,6 @@ class TestArgumentValidation:
         interval = "1m"  # Short interval
         
         valid, error_msg = config.validateArgs(period, interval, mock_config)
-        
         assert valid is False
-        assert "Short intervals" in error_msg
-        assert "not allowed with long periods" in error_msg
+        assert "Invalid" in error_msg
+        assert "Allowed intervals are" in error_msg

@@ -2,7 +2,7 @@ import pytest
 import os
 import pandas as pd
 from unittest.mock import patch, MagicMock
-
+from conftest import sample_stock_data
 import ingestion
 import preprocessing
 import processing
@@ -10,7 +10,7 @@ import model
 import utils
 
 @pytest.mark.integration
-class TestStockDataPipeline:
+class TestStockDataPipeline:    
     @patch('yfinance.download')
     @patch('matplotlib.pyplot.savefig')
     @patch('matplotlib.pyplot.close')
@@ -20,7 +20,7 @@ class TestStockDataPipeline:
     @patch('matplotlib.pyplot.xlabel')
     @patch('matplotlib.pyplot.ylabel')
     @patch('matplotlib.pyplot.tight_layout')
-    def test_full_data_pipeline(self, mock_tight_layout, mock_ylabel, mock_xlabel, mock_title, mock_plot, mock_figure, mock_close, mock_savefig, mock_yf_download, processed_stock_data, tmp_path):
+    def test_full_data_pipeline(self, mock_tight_layout, mock_ylabel, mock_xlabel, mock_title, mock_plot, mock_figure, mock_close, mock_savefig, mock_yf_download, processed_stock_data, tmp_path, sample_stock_data):
         """Test the full data pipeline from ingestion to prediction"""
         # Setup test data
         ticker = "AAPL"
@@ -30,8 +30,7 @@ class TestStockDataPipeline:
         # Create necessary directories
         os.makedirs(tmp_path / "data/raw", exist_ok=True)
         os.makedirs(tmp_path / "data/processed", exist_ok=True)
-        os.makedirs(tmp_path / "data/predictions", exist_ok=True)
-          # Mock YFinance to return our sample test data
+        os.makedirs(tmp_path / "data/predictions", exist_ok=True)        # Mock YFinance to return our sample test data
         mock_yf_download.return_value = sample_stock_data.rename(columns={'Price': 'Date'}).set_index('Date')
         
         # Patch the file paths to use our temporary directory
@@ -71,7 +70,7 @@ class TestStockDataPipeline:
                                     mock_split.return_value = (x_train, x_test, y_train, y_test)
                                     
                                     mock_model = MagicMock()
-                                    mock_model.predict.return_value = [160.0]
+                                    mock_model.predict.return_value = [160.0] * len(x_test)
                                     mock_xgb.return_value = mock_model
                                     
                                     # Run prediction
