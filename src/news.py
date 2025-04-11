@@ -7,40 +7,40 @@ from config import loadConfig
 
 def fetch_ticker_news(ticker: str, daysLookback: int = 7, storiesCount: int = 20) -> List[Dict]:
     try:
-        # calculate hours ago from daysLookback
+        # oblicz godziny wstecz z daysLookback
         hours_ago = daysLookback * 24
         
-        # query construction for tickertick
+        # konstrukcja zapytania dla tickertick
         # format: (and tt:<ticker> T:curated)
         query = f"(and tt:{ticker.lower()} T:curated)"
         
         stories = get_feed(query=query, no=storiesCount, hours_ago=hours_ago)
         
-        # return stories as a list of dictionaries
+        # zwróć historię jako listę słowników
         return [
             {
                 'id': story.id,
                 'time': story.time,
                 'url': story.url,
                 'site': story.site,
-                'title': story.tags[0] if story.tags else "No title available",
-                'description': story.description or "No description available"
+                'title': story.tags[0] if story.tags else "Brak dostępnego tytułu",
+                'description': story.description or "Brak dostępnego opisu"
             }
             for story in stories
         ]
     except Exception as e:
-        print(f"Error fetching news for {ticker}: {str(e)}")
+        print(f"Błąd podczas pobierania wiadomości dla {ticker}: {str(e)}")
         return []
 
 def analyze_sentiment(stories: List[Dict]) -> Dict:
     """
-    Analyze sentiment of news stories using VADER
+    Analizuj sentyment wiadomości używając VADER
     
     Args:
-        stories: List of news story dictionaries
+        stories: Lista słowników z wiadomościami
         
     Returns:
-        Dictionary containing sentiment metrics
+        Słownik zawierający metryki sentymentu
     """
     if not stories:
         return {
@@ -54,17 +54,17 @@ def analyze_sentiment(stories: List[Dict]) -> Dict:
     
     analyzer = SentimentIntensityAnalyzer()
     
-    # calculate sentiment for each story
+    # oblicz sentyment dla każdej wiadomości
     compoundScores = []
     sentiments = {'positive': 0, 'negative': 0, 'neutral': 0}
     
     for story in stories:
-        # analyze both title and description
+        # analizuj zarówno tytuł jak i opis
         title = story.get('title', '')
         description = story.get('description', '')
         content = f"{title}. {description}"
         
-        # get sentiment scores
+        # pobierz wyniki sentymentu
         sentiment = analyzer.polarity_scores(content)
         compoundScores.append(sentiment['compound'])
         
@@ -75,16 +75,16 @@ def analyze_sentiment(stories: List[Dict]) -> Dict:
         else:
             sentiments['neutral'] += 1
     
-    # calculate metrics
+    # oblicz metryki
     storyCount = len(stories)
     compoundAvg = np.mean(compoundScores) if compoundScores else 0
     
-    # calculate ratios
+    # oblicz współczynniki
     positiveRatio = sentiments['positive'] / storyCount if storyCount > 0 else 0
     negativeRatio = sentiments['negative'] / storyCount if storyCount > 0 else 0
     neutralRatio = sentiments['neutral'] / storyCount if storyCount > 0 else 0
     
-    # score goes -1 to 1
+    # wynik od -1 do 1
     sentimentScore = compoundAvg
     
     return {
@@ -126,16 +126,16 @@ def adjustPredictionWithSentiment(prediction: float, sentimentScore: float, orig
     config = loadConfig()
     newsConfig = config.get('news_sentiment', {})
     
-    # return original if sentiment is disabled
+    # zwróć oryginalną wartość jeśli sentyment jest wyłączony
     if not newsConfig.get('enabled', False):
         return prediction
     
     weight = weight or newsConfig.get('sentiment_impact_weight', 0.5)
     
-    # make sure weight is capped
+    # upewnij się, że waga jest ograniczona
     weight = max(0, min(1, weight))
     
-    # news influence decay
+    # zanik wpływu wiadomości
     timeFactor = max(0.2, min(1.0, 30 / max(30, daysAhead)))
     
     adjustedWeight = weight * timeFactor

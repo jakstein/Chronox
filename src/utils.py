@@ -14,17 +14,17 @@ def loadData(filePath):
 
 
 def generatePredictionChart(data, predictionValue, days_ahead, ticker, period, interval, modelName):
-    # axos and figure
+    # oś i figura
     plt.figure(figsize=(12, 6))
     
-    # get date and close price
+    # pobierz datę i cenę zamknięcia
     dates = pandas.to_datetime(data['Price'])
     close_prices = data['Close']
     
-    # last date
+    # ostatnia data
     lastDate = dates.iloc[-1]
     
-    # figure out prediction date
+    # ustal datę przewidywania
     if interval.endswith('m'):
         minutes = int(interval[:-1])
         futureDate = lastDate + timedelta(minutes=minutes * days_ahead)
@@ -36,40 +36,40 @@ def generatePredictionChart(data, predictionValue, days_ahead, ticker, period, i
     elif interval.endswith('wk'):
         futureDate = lastDate + timedelta(weeks=days_ahead)
     elif interval.endswith('mo'):
-        # months 30 days
+        # miesiące po 30 dni
         futureDate = lastDate + timedelta(days=days_ahead * 30)
     else:
-        # default to days if unknown
+        # domyślnie dni, jeśli nieznany
         futureDate = lastDate + timedelta(days=days_ahead)
     
-    # historical
-    plt.plot(dates, close_prices, color='blue', label='Historical Close Price')
+    # historyczne
+    plt.plot(dates, close_prices, color='blue', label='Historyczna Cena Zamknięcia')
     
-    # future line
+    # linia przyszłości
     plt.plot([lastDate, futureDate], [close_prices.iloc[-1], predictionValue], 
-             color='red', linestyle='--', label=f'{modelName} Prediction')
+             color='red', linestyle='--', label=f'Przewidywanie {modelName}')
     
-    # predictiomn point marker
+    # znacznik punktu predykcji
     plt.scatter(futureDate, predictionValue, color='red', s=50)
     
-    # annotate predicted value
+    # adnotacja przewidywanej wartości
     plt.annotate(f'${predictionValue:.2f}', 
                  (futureDate, predictionValue),
                  xytext=(10, 0),
                  textcoords='offset points',
                  fontweight='bold')
     
-    # title and labels
-    plt.title(f"{ticker} Stock Price Prediction ({modelName})")
-    plt.xlabel("Date")
-    plt.ylabel("Price (USD)")
+    # tytuł i etykiety
+    plt.title(f"Przewidywanie Ceny Akcji {ticker} ({modelName})")
+    plt.xlabel("Data")
+    plt.ylabel("Cena (USD)")
     plt.grid(True, alpha=0.3)
     plt.legend()
     
-    # rotate lbels
+    # obróć etykiety
     plt.gcf().autofmt_xdate()
     
-    # tight layout
+    # kompaktowy układ
     plt.tight_layout()
     
     chartPath = f'./data/predictions/{ticker}_{period}_{interval}_{modelName.lower()}.png'

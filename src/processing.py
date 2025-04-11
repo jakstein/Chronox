@@ -34,14 +34,14 @@ def addFeatures(data, ticker, tperiod, tinterval):
     RSIdelta = data["Close"].diff()
     RSIgain = RSIdelta.where(RSIdelta > 0,0)
     RSIloss = -RSIdelta.where(RSIdelta < 0,0)
-    #wilders smoothing
+    # wygładzanie wildersem
     RSIavgGain = RSIgain.ewm(com=13, adjust=False).mean()
     RSIavgLoss = RSIloss.ewm(com=13, adjust=False).mean()
     RSI = RSIavgGain/RSIavgLoss
     data["RSI"] = 100-(100/(1+RSI))
 
 
-    data = data.dropna() #ensure no empty values
+    data = data.dropna() # usuń wiersze z NaN
     data.to_csv(f'./data/processed/{ticker}_{tperiod}_{tinterval}.csv', index=False, mode='w')
     
     return data

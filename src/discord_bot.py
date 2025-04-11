@@ -29,128 +29,128 @@ allowed_periods = allowed_args.get('periods', [])
 
 @bot.event
 async def on_ready():
-    print(f'Bot is ready. Logged in as {bot.user}')
+    print(f'Bot jest gotowy. Zalogowano jako {bot.user}')
 
 @bot.command(name='helpStock')
 async def helpStock(ctx):    
-    """Show help for all stock commands"""
+    """Pokaż pomoc dla wszystkich poleceń giełdowych"""
     help_text = """
-**Chronox Stock Bot Commands**
-`!fetchStock <ticker> [period] [interval]` - Fetch stock data
-   - ticker: Stock symbol (e.g., AAPL)
-   - period: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max (default: 1y)
-   - interval: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo (default: 1d)
+**Polecenia Bota Chronox Stock**
+`!fetchStock <ticker> [period] [interval]` - Pobierz dane akcji
+   - ticker: Symbol akcji (np. AAPL)
+   - period: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max (domyślnie: 1y)
+   - interval: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo (domyślnie: 1d)
 
-`!stockChart <ticker> [period] [interval]` - Get stock price chart
+`!stockChart <ticker> [period] [interval]` - Uzyskaj wykres cen akcji
 
-`!stockFeatures <ticker> [period] [interval]` - Get feature table for stock
+`!stockFeatures <ticker> [period] [interval]` - Uzyskaj tabelę cech dla akcji
 
-`!predictXgboost <ticker> [period] [interval] [daysAhead] [test_size] [shuffle]` - Get XGBoost prediction
-   - daysAhead: Days to predict ahead (default: 30)
-   - test_size: Test size ratio (default: 0.2)
-   - shuffle: Add "shuffle" to randomly shuffle data (default: False)
+`!predictXgboost <ticker> [period] [interval] [daysAhead] [test_size] [shuffle]` - Uzyskaj prognozę XGBoost
+   - daysAhead: Liczba dni do przewidzenia (domyślnie: 30)
+   - test_size: Współczynnik wielkości testu (domyślnie: 0.2)
+   - shuffle: Dodaj "shuffle", aby losowo wymieszać dane (domyślnie: False)
 
-`!predictLightgbm <ticker> [period] [interval] [daysAhead] [test_size] [shuffle]` - Get LightGBM prediction
-   - daysAhead: Days to predict ahead (default: 30)
-   - test_size: Test size ratio (default: 0.2)
-   - shuffle: Add "shuffle" to randomly shuffle data (default: False)
+`!predictLightgbm <ticker> [period] [interval] [daysAhead] [test_size] [shuffle]` - Uzyskaj prognozę LightGBM
+   - daysAhead: Liczba dni do przewidzenia (domyślnie: 30)
+   - test_size: Współczynnik wielkości testu (domyślnie: 0.2)
+   - shuffle: Dodaj "shuffle", aby losowo wymieszać dane (domyślnie: False)
 
-`!predictProphet <ticker> [period] [interval] [daysAhead] [test_size]` - Get Prophet prediction
-   - daysAhead: Days to predict ahead (default: 30)
-   - test_size: Test size ratio (default: 0.2)
+`!predictProphet <ticker> [period] [interval] [daysAhead] [test_size]` - Uzyskaj prognozę Prophet
+   - daysAhead: Liczba dni do przewidzenia (domyślnie: 30)
+   - test_size: Współczynnik wielkości testu (domyślnie: 0.2)
 
-`!news <ticker> [count]` - Get latest news for a ticker
-   - count: Number of news items to fetch (default: 5)
+`!news <ticker> [count]` - Uzyskaj najnowsze wiadomości dla akcji
+   - count: Liczba wiadomości do pobrania (domyślnie: 5)
     """
     await ctx.send(help_text)
 
 @bot.command(name='fetchStock')
 async def fetchStockCmd(ctx, ticker=None, period=None, interval=None):
-    """Fetch stock data for the given ticker"""
+    """Pobierz dane akcji dla podanego tickera"""
     ticker = ticker or default_ticker
     period = period or default_period
     interval = interval or default_interval
 
-    # args validation
+    # walidacja argumentów
     valid, error_msg = validateArgs(period, interval)
     if not valid:
         await ctx.send(f"❌ {error_msg}")
         return
 
-    await ctx.send(f"Fetching {ticker} stock data for {period} with {interval} interval...")
+    await ctx.send(f"Pobieranie danych akcji {ticker} dla okresu {period} z interwałem {interval}...")
     
     try:
         os.makedirs('./data/raw', exist_ok=True)
         os.makedirs('./data/processed', exist_ok=True)
         
         ingestion.fetchStock(ticker, period, interval)
-        await ctx.send(f"Successfully fetched {ticker} data!")
+        await ctx.send(f"Pomyślnie pobrano dane dla {ticker}!")
         
         file = discord.File(f'./data/raw/{ticker}_{period}_{interval}.png', filename=f'{ticker}_chart.png')
         await ctx.send(file=file)
     except Exception as e:
-        await ctx.send(f"Error fetching stock data: {str(e)}")
+        await ctx.send(f"Błąd podczas pobierania danych akcji: {str(e)}")
 
 @bot.command(name='stockChart')
 async def stockChart(ctx, ticker=None, period=None, interval=None):
-    """Send stock chart for the given ticker"""
+    """Wyślij wykres akcji dla podanego tickera"""
     ticker = ticker or default_ticker
     period = period or default_period
     interval = interval or default_interval
 
-    # args validation
+    # walidacja argumentów
     valid, error_msg = validateArgs(period, interval)
     if not valid:
         await ctx.send(f"❌ {error_msg}")
         return
 
     try:
-        await ctx.send(f"Fetching latest {ticker} data...")
+        await ctx.send(f"Pobieranie najnowszych danych dla {ticker}...")
         ingestion.fetchStock(ticker, period, interval)
         
         chartPath = f'./data/raw/{ticker}_{period}_{interval}.png'
         file = discord.File(chartPath, filename=f'{ticker}_chart.png')
         await ctx.send(file=file)
     except Exception as e:
-        await ctx.send(f"Error generating chart: {str(e)}")
+        await ctx.send(f"Błąd podczas generowania wykresu: {str(e)}")
 
 @bot.command(name='stockFeatures')
 async def stockFeatures(ctx, ticker=None, period=None, interval=None):
-    """Display feature table for the given stock"""
+    """Wyświetl tabelę cech dla danej akcji"""
     ticker = ticker or default_ticker
     period = period or default_period
     interval = interval or default_interval
 
-    # args validation
+    # walidacja argumentów
     valid, error_msg = validateArgs(period, interval)
     if not valid:
         await ctx.send(f"❌ {error_msg}")
         return
 
     try:
-        await ctx.send(f"Fetching latest {ticker} data...")
+        await ctx.send(f"Pobieranie najnowszych danych dla {ticker}...")
         ingestion.fetchStock(ticker, period, interval)
         
         raw_path = f'./data/raw/{ticker}_{period}_{interval}.csv'
         processed_path = f'./data/processed/{ticker}_{period}_{interval}.csv'
         
-        await ctx.send("Calculating features...")
+        await ctx.send("Obliczanie cech...")
         data = utils.loadData(raw_path)
         data = preprocessing.cleanData(data, ticker, period, interval)
         data = processing.addFeatures(data, ticker, period, interval)
     
         data = pd.read_csv(processed_path)
         
-        # last 10 rows for display
+        # ostatnie 10 wierszy do wyświetlenia
         last_rows = data.tail(10)
         
-        # format as a text table for Discord
-        features_str = f"**{ticker} Features (last 10 rows)**\n```\n"
+        # formatowanie jako tabela tekstowa dla Discord
+        features_str = f"**Cechy {ticker} (ostatnie 10 wierszy)**\n```\n"
         features_str += last_rows.to_string(index=False)
         features_str += "\n```"
         
         if len(features_str) > 2000:
-            # in case too long for Discord, send as a CSV file
+            # w przypadku zbyt długiej wiadomości dla Discord, wyślij jako plik CSV
             buffer = io.StringIO()
             last_rows.to_csv(buffer, index=False)
             buffer.seek(0)
@@ -159,22 +159,22 @@ async def stockFeatures(ctx, ticker=None, period=None, interval=None):
                 fp=io.BytesIO(buffer.getvalue().encode()),
                 filename=f"{ticker}_features.csv"
             )
-            await ctx.send("Features table (last 10 rows):", file=file)
+            await ctx.send("Tabela cech (ostatnie 10 wierszy):", file=file)
         else:
             await ctx.send(features_str)
             
     except Exception as e:
-        await ctx.send(f"Error generating features: {str(e)}")
+        await ctx.send(f"Błąd podczas generowania cech: {str(e)}")
 
 @bot.command(name='predictXgboost')
 async def predictXgboost(ctx, ticker=None, period=None, interval=None, daysAhead=30, test_size=0.2, shuffle=None):
-    """Get XGBoost prediction for the given stock"""
+    """Uzyskaj prognozę XGBoost dla danej akcji"""
     ticker = ticker or default_ticker
     period = period or default_period
     interval = interval or default_interval
     shuffleData = shuffle == "shuffle"
 
-    # args validation
+    # walidacja argumentów
     valid, error_msg = validateArgs(period, interval)
     if not valid:
         await ctx.send(f"❌ {error_msg}")
@@ -184,48 +184,47 @@ async def predictXgboost(ctx, ticker=None, period=None, interval=None, daysAhead
         daysAhead = int(daysAhead)
         test_size = float(test_size)
 
-        await ctx.send(f"Fetching latest {ticker} data...")
+        await ctx.send(f"Pobieranie najnowszych danych dla {ticker}...")
         ingestion.fetchStock(ticker, period, interval)
         
         raw_path = f'./data/raw/{ticker}_{period}_{interval}.csv'
         processed_path = f'./data/processed/{ticker}_{period}_{interval}.csv'
         
-        await ctx.send("Processing data with features...")
+        await ctx.send("Przetwarzanie danych z cechami...")
         data = utils.loadData(raw_path)
         data = preprocessing.cleanData(data, ticker, period, interval)
         data = processing.addFeatures(data, ticker, period, interval)
         
         data = pd.read_csv(processed_path)
-        # prediction start
-        shuffleMsg = ", with shuffled data" if shuffleData else ""
-        await ctx.send(f"Running XGBoost prediction for {ticker}, {daysAhead} days ahead{shuffleMsg}...")
+        # rozpoczęcie prognozy
+        shuffleMsg = ", z przemieszanymi danymi" if shuffleData else ""
+        await ctx.send(f"Uruchamianie prognozy XGBoost dla {ticker}, {daysAhead} dni do przodu{shuffleMsg}...")
         result = model.trainXGBoost(data, ticker, period, interval, daysAhead, test_size, return_result=True, shuffle=shuffleData)
         
-        # pred message
+        # wiadomość z prognozą
         predictionMsg = f"""
-**XGBoost Prediction for {result['ticker']}**
-- Period: {result['period']}, Interval: {result['interval']}
-- Last Close Price: ${result['lastClose']:.2f}
-- Predicted Price ({daysAhead} days ahead): ${result['prediction']:.2f}
-- Change: ${(result['prediction'] - result['lastClose']):.2f} ({((result['prediction'] / result['lastClose'] - 1) * 100):.2f}%)
-- Model Error (RMSE): {result['error']:.4f}
-"""
-        # extra sentiment info if enabled
+**Prognoza XGBoost dla {result['ticker']}**
+- Okres: {result['period']}, Interwał: {result['interval']}
+- Ostatnia cena zamknięcia: ${result['lastClose']:.2f}
+- Prognozowana cena (za {daysAhead} dni): ${result['prediction']:.2f}
+- Zmiana: ${(result['prediction'] - result['lastClose']):.2f} ({((result['prediction'] / result['lastClose'] - 1) * 100):.2f}%)
+- Błąd modelu (RMSE): {result['error']:.4f}
+"""        # dodatkowe informacje o sentymencie, jeśli włączone
         if result.get('sentimentEnabled', False):
             sentimentScore = result.get('sentimentScore', 0)
-            sentiment_status = "Positive" if sentimentScore > 0.05 else "Negative" if sentimentScore < -0.05 else "Neutral"
+            sentiment_status = "Pozytywny" if sentimentScore > 0.05 else "Negatywny" if sentimentScore < -0.05 else "Neutralny"
             
             predictionMsg += f"""
-**News Sentiment Analysis**
-- Sentiment: {sentiment_status} ({sentimentScore:.4f})
-- Original Prediction: ${result.get('originalPrediction', 0):.2f}
-- Sentiment-Adjusted: ${result['prediction']:.2f}
-- Adjustment: ${(result['prediction'] - result.get('originalPrediction', 0)):.2f}
+**Analiza Sentymentu Wiadomości**
+- Sentyment: {sentiment_status} ({sentimentScore:.4f})
+- Oryginalna prognoza: ${result.get('originalPrediction', 0):.2f}
+- Po korekcie sentymentu: ${result['prediction']:.2f}
+- Korekta: ${(result['prediction'] - result.get('originalPrediction', 0)):.2f}
 """
 
         await ctx.send(predictionMsg)
         
-        # make chart
+        # tworzenie wykresu
         chartPath = utils.generatePredictionChart(
             data=data,
             predictionValue=result['prediction'],
@@ -240,17 +239,17 @@ async def predictXgboost(ctx, ticker=None, period=None, interval=None, daysAhead
         await ctx.send(file=file)
         
     except Exception as e:
-        await ctx.send(f"Error making prediction: {str(e)}")
+        await ctx.send(f"Błąd podczas tworzenia prognozy: {str(e)}")
 
 @bot.command(name='predictLightgbm')
 async def predictLightgbm(ctx, ticker=None, period=None, interval=None, daysAhead=30, test_size=0.2, shuffle=None):
-    """Get LightGBM prediction for the given stock"""
+    """Uzyskaj prognozę LightGBM dla danej akcji"""
     ticker = ticker or default_ticker
     period = period or default_period
     interval = interval or default_interval
     shuffleData = shuffle == "shuffle"
 
-    # args validation
+    # walidacja argumentów
     valid, error_msg = validateArgs(period, interval)
     if not valid:
         await ctx.send(f"❌ {error_msg}")
@@ -260,48 +259,47 @@ async def predictLightgbm(ctx, ticker=None, period=None, interval=None, daysAhea
         daysAhead = int(daysAhead)
         test_size = float(test_size)
         
-        await ctx.send(f"Fetching latest {ticker} data...")
+        await ctx.send(f"Pobieranie najnowszych danych dla {ticker}...")
         ingestion.fetchStock(ticker, period, interval)
         
         raw_path = f'./data/raw/{ticker}_{period}_{interval}.csv'
         processed_path = f'./data/processed/{ticker}_{period}_{interval}.csv'
         
-        await ctx.send("Processing data with features...")
+        await ctx.send("Przetwarzanie danych z cechami...")
         data = utils.loadData(raw_path)
         data = preprocessing.cleanData(data, ticker, period, interval)
         data = processing.addFeatures(data, ticker, period, interval)
         
         data = pd.read_csv(processed_path)
-          # run prediction
-        shuffleMsg = ", with shuffled data" if shuffleData else ""
-        await ctx.send(f"Running LightGBM prediction for {ticker}, {daysAhead} days ahead{shuffleMsg}...")
+          # uruchomienie prognozy
+        shuffleMsg = ", z przemieszanymi danymi" if shuffleData else ""
+        await ctx.send(f"Uruchamianie prognozy LightGBM dla {ticker}, {daysAhead} dni do przodu{shuffleMsg}...")
         result = model.trainLightGBM(data, ticker, period, interval, daysAhead, test_size, return_result=True, shuffle=shuffleData)
         
-        # output message
+        # wiadomość z wynikiem
         predictionMsg = f"""
-**LightGBM Prediction for {result['ticker']}**
-- Period: {result['period']}, Interval: {result['interval']}
-- Last Close Price: ${result['lastClose']:.2f}
-- Predicted Price ({daysAhead} days ahead): ${result['prediction']:.2f}
-- Change: ${(result['prediction'] - result['lastClose']):.2f} ({((result['prediction'] / result['lastClose'] - 1) * 100):.2f}%)
-- Model Error (RMSE): {result['error']:.4f}
-"""
-        # sentiment if needed
+**Prognoza LightGBM dla {result['ticker']}**
+- Okres: {result['period']}, Interwał: {result['interval']}
+- Ostatnia cena zamknięcia: ${result['lastClose']:.2f}
+- Prognozowana cena (za {daysAhead} dni): ${result['prediction']:.2f}
+- Zmiana: ${(result['prediction'] - result['lastClose']):.2f} ({((result['prediction'] / result['lastClose'] - 1) * 100):.2f}%)
+- Błąd modelu (RMSE): {result['error']:.4f}
+"""        # analiza sentymentu jeśli potrzebna
         if result.get('sentimentEnabled', False):
             sentimentScore = result.get('sentimentScore', 0)
-            sentiment_status = "Positive" if sentimentScore > 0.05 else "Negative" if sentimentScore < -0.05 else "Neutral"
+            sentiment_status = "Pozytywny" if sentimentScore > 0.05 else "Negatywny" if sentimentScore < -0.05 else "Neutralny"
             
             predictionMsg += f"""
-**News Sentiment Analysis**
-- Sentiment: {sentiment_status} ({sentimentScore:.4f})
-- Original Prediction: ${result.get('originalPrediction', 0):.2f}
-- Sentiment-Adjusted: ${result['prediction']:.2f}
-- Adjustment: ${(result['prediction'] - result.get('originalPrediction', 0)):.2f}
+**Analiza Sentymentu Wiadomości**
+- Sentyment: {sentiment_status} ({sentimentScore:.4f})
+- Oryginalna prognoza: ${result.get('originalPrediction', 0):.2f}
+- Po korekcie sentymentu: ${result['prediction']:.2f}
+- Korekta: ${(result['prediction'] - result.get('originalPrediction', 0)):.2f}
 """
 
         await ctx.send(predictionMsg)
         
-        # chart
+        # wykres
         chartPath = utils.generatePredictionChart(
             data=data,
             predictionValue=result['prediction'],
@@ -316,16 +314,16 @@ async def predictLightgbm(ctx, ticker=None, period=None, interval=None, daysAhea
         await ctx.send(file=file)
         
     except Exception as e:
-        await ctx.send(f"Error making prediction: {str(e)}")
+        await ctx.send(f"Błąd podczas tworzenia prognozy: {str(e)}")
 
 @bot.command(name='predictProphet')
 async def predictProphet(ctx, ticker=None, period=None, interval=None, daysAhead=30, test_size=0.2):
-    """Get Prophet prediction for the given stock"""
+    """Uzyskaj prognozę Prophet dla danej akcji"""
     ticker = ticker or default_ticker
     period = period or default_period
     interval = interval or default_interval
 
-    # args validation
+    # walidacja argumentów
     valid, error_msg = validateArgs(period, interval)
     if not valid:
         await ctx.send(f"❌ {error_msg}")
@@ -335,48 +333,47 @@ async def predictProphet(ctx, ticker=None, period=None, interval=None, daysAhead
         daysAhead = int(daysAhead)
         test_size = float(test_size)
         
-        await ctx.send(f"Fetching latest {ticker} data...")
+        await ctx.send(f"Pobieranie najnowszych danych dla {ticker}...")
         ingestion.fetchStock(ticker, period, interval)
         
         raw_path = f'./data/raw/{ticker}_{period}_{interval}.csv'
         processed_path = f'./data/processed/{ticker}_{period}_{interval}.csv'
         
-        await ctx.send("Processing data with features...")
+        await ctx.send("Przetwarzanie danych z cechami...")
         data = utils.loadData(raw_path)
         data = preprocessing.cleanData(data, ticker, period, interval)
         data = processing.addFeatures(data, ticker, period, interval)
         
         data = pd.read_csv(processed_path)
         
-        # run prediction
-        await ctx.send(f"Running Prophet prediction for {ticker}, {daysAhead} days ahead...")
+        # uruchomienie prognozy
+        await ctx.send(f"Uruchamianie prognozy Prophet dla {ticker}, {daysAhead} dni do przodu...")
         result = model.trainProphet(data, ticker, period, interval, daysAhead, test_size, return_result=True)
         
-        # output message
+        # wiadomość wynikowa
         predictionMsg = f"""
-**Prophet Prediction for {result['ticker']}**
-- Period: {result['period']}, Interval: {result['interval']}
-- Last Close Price: ${result['lastClose']:.2f}
-- Predicted Price ({daysAhead} days ahead): ${result['prediction']:.2f}
-- Change: ${(result['prediction'] - result['lastClose']):.2f} ({((result['prediction'] / result['lastClose'] - 1) * 100):.2f}%)
-- Model Error (RMSE): {result['error']:.4f}
-"""
-        # sentiments
+**Prognoza Prophet dla {result['ticker']}**
+- Okres: {result['period']}, Interwał: {result['interval']}
+- Ostatnia cena zamknięcia: ${result['lastClose']:.2f}
+- Prognozowana cena (za {daysAhead} dni): ${result['prediction']:.2f}
+- Zmiana: ${(result['prediction'] - result['lastClose']):.2f} ({((result['prediction'] / result['lastClose'] - 1) * 100):.2f}%)
+- Błąd modelu (RMSE): {result['error']:.4f}
+"""        # analiza sentymentu
         if result.get('sentimentEnabled', False):
             sentimentScore = result.get('sentimentScore', 0)
-            sentiment_status = "Positive" if sentimentScore > 0.05 else "Negative" if sentimentScore < -0.05 else "Neutral"
+            sentiment_status = "Pozytywny" if sentimentScore > 0.05 else "Negatywny" if sentimentScore < -0.05 else "Neutralny"
             
             predictionMsg += f"""
-**News Sentiment Analysis**
-- Sentiment: {sentiment_status} ({sentimentScore:.4f})
-- Original Prediction: ${result.get('originalPrediction', 0):.2f}
-- Sentiment-Adjusted: ${result['prediction']:.2f}
-- Adjustment: ${(result['prediction'] - result.get('originalPrediction', 0)):.2f}
+**Analiza Sentymentu Wiadomości**
+- Sentyment: {sentiment_status} ({sentimentScore:.4f})
+- Oryginalna prognoza: ${result.get('originalPrediction', 0):.2f}
+- Po korekcie sentymentu: ${result['prediction']:.2f}
+- Korekta: ${(result['prediction'] - result.get('originalPrediction', 0)):.2f}
 """
 
         await ctx.send(predictionMsg)
         
-        # chart
+        # wykres
         chartPath = utils.generatePredictionChart(
             data=data,
             predictionValue=result['prediction'],
@@ -391,40 +388,40 @@ async def predictProphet(ctx, ticker=None, period=None, interval=None, daysAhead
         await ctx.send(file=file)
         
     except Exception as e:
-        await ctx.send(f"Error making prediction: {str(e)}")
+        await ctx.send(f"Błąd podczas tworzenia prognozy: {str(e)}")
 
 @bot.command(name='news')
 async def get_news(ctx, ticker=None, count=5):
-    """Get the latest news for a ticker"""
+    """Pobierz najnowsze wiadomości dla danego tickera"""
     ticker = ticker or default_ticker
     try:
         count = int(count)
         
-        await ctx.send(f"Fetching latest news for {ticker}...")
+        await ctx.send(f"Pobieranie najnowszych wiadomości dla {ticker}...")
         
-        # get sentiment data and stories
+        # pobierz dane sentymentu i wiadomości
         _, stories = news.getSentimentData(ticker)
         
         if not stories:
-            await ctx.send(f"No recent news found for {ticker}")
+            await ctx.send(f"Nie znaleziono ostatnich wiadomości dla {ticker}")
             return
             
-        # stories count cap
+        # ogranicz liczbę wiadomości
         stories = stories[:min(count, len(stories))]
         
-        news_msg = f"**Latest News for {ticker.upper()}**\n\n"
+        news_msg = f"**Najnowsze wiadomości dla {ticker.upper()}**\n\n"
         
         for i, story in enumerate(stories, 1):
             time_str = story['time'].strftime('%Y-%m-%d %H:%M:%S UTC')
-            title = story.get('title', 'No title available')
-            source = story.get('site', 'Unknown source')
+            title = story.get('title', 'Brak dostępnego tytułu')
+            source = story.get('site', 'Nieznane źródło')
             url = story.get('url', '')
             
             news_msg += f"**{i}. {title}**\n"
-            news_msg += f"Source: {source} | {time_str}\n"
+            news_msg += f"Źródło: {source} | {time_str}\n"
             news_msg += f"Link: {url}\n\n"
             
-            # discord 2000 char limit cap
+            # limit znaków Discorda (2000)
             if len(news_msg) > 1800 and i < len(stories):
                 await ctx.send(news_msg)
                 news_msg = ""
@@ -433,59 +430,58 @@ async def get_news(ctx, ticker=None, count=5):
             await ctx.send(news_msg)
             
     except Exception as e:
-        await ctx.send(f"Error fetching news: {str(e)}")
-
+        await ctx.send(f"Błąd podczas pobierania wiadomości: {str(e)}")
 @bot.command(name='prune')
 async def prune(ctx, count="5"):
     try:
         count = int(count)
         if count <= 0:
-            await ctx.send("Please provide a positive number of messages to delete.")
+            await ctx.send("Podaj dodatnią liczbę wiadomości do usunięcia.")
             return
             
-        # get recent messages
+        # pobierz ostatnie wiadomości
         messages = []
         async for message in ctx.channel.history(limit=100):
             messages.append(message)
         
-        # only get bot messages
+        # tylko wiadomości bota
         bot_messages = [message for message in messages if message.author == bot.user]
         
-        # take count of mesages 
+        # weź określoną liczbę wiadomości 
         messages_to_delete = bot_messages[:min(count, len(bot_messages))]
         
-        # deletion
+        # usuwanie
         deleted_count = 0
         for message in messages_to_delete:
             await message.delete()
             deleted_count += 1
             
-        confirmation_msg = await ctx.send(f"Deleted {deleted_count} bot messages.")
+        confirmation_msg = await ctx.send(f"Usunięto {deleted_count} wiadomości bota.")
         
-        # delete the command mesage
+        # usuń komendę
         await ctx.message.delete()
         
     except Exception as e:
-        await ctx.send(f"Error pruning messages: {str(e)}")
+        await ctx.send(f"Błąd podczas usuwania wiadomości: {str(e)}")
 
 def runDiscordBot(token=None):
-    """Run the Discord bot with the given token or from config"""
+    """Uruchom bota Discord z podanym tokenem lub z konfiguracji"""
     if token is None:
         token = discord_config.get('token', os.getenv("DISCORD_TOKEN"))
     
     if not token:
-        print("No Discord token found in config or environment variables")
+        print("Nie znaleziono tokenu Discord w konfiguracji ani zmiennych środowiskowych")
         return
         
     bot.run(token)
 
 if __name__ == "__main__":
-    # try grab token from config, fallback to env var if not found
+    # spróbuj pobrać token z konfiguracji, w razie niepowodzenia użyj zmiennej środowiskowej
     token = discord_config.get('token')
     if not token:
         token = os.getenv("DISCORD_TOKEN")
         
     if not token:
-        print("Please set a Discord token in config.json or DISCORD_TOKEN environment variable")
+        print("Ustaw token Discord w pliku config.json lub zmiennej środowiskowej DISCORD_TOKEN")
     else:
         runDiscordBot(token)

@@ -8,10 +8,10 @@ def loadConfig():
         with open(config_path, 'r') as f:
             return json.load(f)
     except FileNotFoundError:
-        print(f"Config file not found at {config_path}. Using default configuration.")
+        print(f"Nie znaleziono pliku konfiguracyjnego w {config_path}. Używam domyślnej konfiguracji.")
     except json.JSONDecodeError:
-        print(f"Error parsing config file at {config_path}. Using default configuration.")
-      # default config as fallback
+        print(f"Błąd parsowania pliku konfiguracyjnego w {config_path}. Używam domyślnej konfiguracji.")
+      # domyślna konfiguracja jako awaryjne rozwiązanie
     return {
         "mode": "discord",
         "discord": {
@@ -48,13 +48,13 @@ def validateArgs(period, interval, config=None):
     short_intervals = allowed_args.get('short_intervals', [])
 
     if period and period not in allowed_periods:
-        return False, f"Invalid period: '{period}'. Allowed periods are: {', '.join(allowed_periods)}"
+        return False, f"Nieprawidłowy okres: '{period}'. Dozwolone okresy to: {', '.join(allowed_periods)}"
     
     if interval and interval not in allowed_intervals:
-        return False, f"Invalid interval: '{interval}'. Allowed intervals are: {', '.join(allowed_intervals)}"
+        return False, f"Nieprawidłowy interwał: '{interval}'. Dozwolone interwały to: {', '.join(allowed_intervals)}"
     
-    # check for incompatible period-interval combinations
+    # sprawdzenie niekompatybilnych kombinacji okres-interwał
     if period in long_periods and interval in short_intervals:
-        return False, f"Short intervals ({', '.join(short_intervals)}) are not allowed with long periods ({', '.join(long_periods)}). Please select a longer interval (e.g., 1d, 5d, 1wk, 1mo)."
+        return False, f"Krótkie interwały ({', '.join(short_intervals)}) nie są dozwolone z długimi okresami ({', '.join(long_periods)}). Proszę wybrać dłuższy interwał (np. 1d, 5d, 1wk, 1mo)."
     
     return True, None

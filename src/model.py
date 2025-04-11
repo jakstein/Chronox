@@ -129,44 +129,42 @@ def trainProphet(data, ticker, tperiod, tinterval, dayTarget, testSize, return_r
     regressorFeatures = ['priceChange', 'ma10', 'ma50', 'ema10', 'ema50', 'macd', 'macdSignal', 
                          'volitStd1w', 'volitStd1mo', 'bollingerUp', 'bollingerDown', 
                          'volma10', 'timeFeature', 'RSI']
-    
-    # add regressors
+      # dodaj regresory
     for feature in regressorFeatures:
         if feature in data.columns:
             prophetData[feature] = data[feature]
     
-    # training/testing splits
+    # podział na dane treningowe/testowe
     trainSize = int(len(prophetData) * (1 - testSize))
     trainData = prophetData.iloc[:trainSize]
     testData = prophetData.iloc[trainSize:]
     
-    # Train Prophet model with regressors
+    # trenuj model Prophet z regresorami
     model = Prophet()
     
-    # each feature is a regressor
+    # każda cecha jest regresorem
     for feature in regressorFeatures:
         if feature in prophetData.columns and feature not in ['ds', 'y']:
             model.add_regressor(feature)
     
     model.fit(trainData)
-      # make predictions for test period and beyond
+      # wykonaj prognozy dla okresu testowego i przyszłości
     future = model.make_future_dataframe(periods=len(testData) + dayTarget)
     
-    # copy regressor values to future dataframe for prediction
+    # kopiuj wartości regresorów do ramki danych przyszłości dla prognozy
     for feature in regressorFeatures:
         if feature in prophetData.columns and feature not in ['ds', 'y']:
             future[feature] = pandas.Series(prophetData[feature].values)
-            # for forecasting horizon, use the last value for each regressor
+            # dla horyzontu prognozowania użyj ostatniej wartości dla każdego regresora
             future.loc[len(prophetData):, feature] = prophetData[feature].iloc[-1]
     
     forecast = model.predict(future)
-    
-    # error calc
+      # obliczanie błędu
     test_predictions = forecast.iloc[trainSize:trainSize+len(testData)]['yhat'].values
     test_actuals = testData['y'].values
     error = numpy.sqrt(sklM.mean_squared_error(test_actuals, test_predictions))
     
-    # get future prediction
+    # pobierz prognozę przyszłości
     futurepred = forecast['yhat'].iloc[-1]
     
     sentimentData, _ = news.getSentimentData(ticker)
@@ -174,7 +172,7 @@ def trainProphet(data, ticker, tperiod, tinterval, dayTarget, testSize, return_r
 
     lastClose = data["Close"].iloc[-1]
     
-    # sentiment adjustment
+    # dostosowanie prognoz na podstawie sentymentu
     adjustedPrediction = news.adjustPredictionWithSentiment(
         prediction=futurepred, 
         sentimentScore=sentimentScore,
