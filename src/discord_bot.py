@@ -407,31 +407,37 @@ async def get_news(ctx, ticker=None, count=5):
         
         if not stories:
             await ctx.send(f"No recent news found for {ticker}")
-            return
-            
+            return 
         # stories count cap
         stories = stories[:min(count, len(stories))]
         
-        news_msg = f"**Latest News for {ticker.upper()}**\n\n"
+        # header
+        if len(stories) > 1:
+            await ctx.send(f"**Latest News for {ticker.upper()}** (showing {len(stories)} stories)")
         
+        # if more than 1 story, multiple messages
         for i, story in enumerate(stories, 1):
             time_str = story['time'].strftime('%Y-%m-%d %H:%M:%S UTC')
             title = story.get('title', 'No title available')
+            description = story.get('description', 'No description available')
             source = story.get('site', 'Unknown source')
             url = story.get('url', '')
+            sentiment = news.analyze_sentiment([story])
+            
+            news_msg = ""
+            if len(stories) == 1:
+                news_msg += f"**Latest News for {ticker.upper()}**\n\n"
             
             news_msg += f"**{i}. {title}**\n"
+            news_msg += f"{description}\n"
+            news_msg += f"Sentiment: {sentiment['compoundAvg']:.4f}\n"
             news_msg += f"Source: {source} | {time_str}\n"
-            news_msg += f"Link: {url}\n\n"
+            news_msg += f"Link: {url}"
             
-            # discord 2000 char limit cap
-            if len(news_msg) > 1800 and i < len(stories):
-                await ctx.send(news_msg)
-                news_msg = ""
-        
-        if news_msg:
+            # each story as separate message
             await ctx.send(news_msg)
-            
+        sentiment = news.analyze_sentiment(stories)
+        await ctx.send(f"Sentiment: {sentiment['positiveRatio']:.2%} Positive | {sentiment['negativeRatio']:.2%} Negative | {sentiment['neutralRatio']:.2%} Neutral\n")
     except Exception as e:
         await ctx.send(f"Error fetching news: {str(e)}")
 
