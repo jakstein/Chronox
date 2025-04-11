@@ -10,54 +10,17 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 
 @pytest.fixture
 def sample_stock_data():
-    """Create a sample stock dataframe for testing"""
-    # Create dates (20 trading days)
-    dates = pd.date_range(start='2023-01-01', periods=20, freq='B')
-    
-    # Create OHLCV data
-    data = {
-        'Price': dates,
-        'Open': np.linspace(150, 160, 20),
-        'High': np.linspace(152, 162, 20),
-        'Low': np.linspace(148, 158, 20),
-        'Close': np.linspace(151, 161, 20),
-        'Volume': np.random.randint(1000000, 5000000, 20)
-    }
-    
-    return pd.DataFrame(data)
+    """Load raw stock data from the test dummy file"""
+    # Load from the existing test data file
+    file_path = os.path.join(os.path.dirname(__file__), 'AAPL_1y_1d_raw.csv')
+    return pd.read_csv(file_path)
 
 @pytest.fixture
 def processed_stock_data():
-    """Create a processed stock dataframe with features for testing"""
-    # Create dates (20 trading days)
-    dates = pd.date_range(start='2023-01-01', periods=20, freq='B')
-    
-    # Start with OHLCV data
-    data = {
-        'Price': dates,
-        'Open': np.linspace(150, 160, 20),
-        'High': np.linspace(152, 162, 20),
-        'Low': np.linspace(148, 158, 20),
-        'Close': np.linspace(151, 161, 20),
-        'Volume': np.random.randint(1000000, 5000000, 20),
-        # Add calculated features
-        'priceChange': np.random.uniform(-2, 2, 20),
-        'ma10': np.linspace(150, 160, 20),
-        'ma50': np.linspace(145, 155, 20),
-        'ema10': np.linspace(150, 160, 20),
-        'ema50': np.linspace(145, 155, 20),
-        'macd': np.random.uniform(-1, 1, 20),
-        'macdSignal': np.random.uniform(-0.5, 0.5, 20),
-        'volitStd1w': np.random.uniform(0.5, 1.5, 20),
-        'volitStd1mo': np.random.uniform(1, 2, 20),
-        'bollingerUp': np.linspace(155, 165, 20),
-        'bollingerDown': np.linspace(145, 155, 20),
-        'volma10': np.linspace(2000000, 3000000, 20),
-        'timeFeature': np.linspace(0, 1, 20),
-        'RSI': np.random.uniform(30, 70, 20)
-    }
-    
-    return pd.DataFrame(data)
+    """Load processed stock dataframe with features from test dummy file"""
+    # Load from the existing processed test data file
+    file_path = os.path.join(os.path.dirname(__file__), 'AAPL_1y_1d_processed.csv')
+    return pd.read_csv(file_path)
 
 @pytest.fixture
 def mock_config():

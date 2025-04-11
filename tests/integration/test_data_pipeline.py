@@ -31,9 +31,8 @@ class TestStockDataPipeline:
         os.makedirs(tmp_path / "data/raw", exist_ok=True)
         os.makedirs(tmp_path / "data/processed", exist_ok=True)
         os.makedirs(tmp_path / "data/predictions", exist_ok=True)
-        
-        # Mock YFinance to return our test data
-        mock_yf_download.return_value = processed_stock_data.rename(columns={'Price': 'Date'}).set_index('Date')
+          # Mock YFinance to return our sample test data
+        mock_yf_download.return_value = sample_stock_data.rename(columns={'Price': 'Date'}).set_index('Date')
         
         # Patch the file paths to use our temporary directory
         with patch('os.makedirs'):
