@@ -69,7 +69,7 @@ class TestLightGBMModel:
     def test_train_lightgbm(self, mock_train_test_split, mock_lgbm, mock_adjust, mock_get_sentiment, mock_read_csv, processed_stock_data):
         """Test LightGBM model training and prediction"""
         # Setup mocks
-        ticker, period, interval = "MSFT", "1y", "1d"
+        ticker, period, interval = "AAPL", "1y", "1d"
         day_target, test_size = 30, 0.2
         last_close = 280.0
         prediction = 295.0
@@ -122,7 +122,7 @@ class TestProphetModel:
     def test_train_prophet(self, mock_prophet, mock_adjust, mock_get_sentiment, mock_read_csv, processed_stock_data):
         """Test Prophet model training and prediction"""
         # Setup mocks
-        ticker, period, interval = "GOOGL", "1y", "1d"
+        ticker, period, interval = "AAPL", "1y", "1d"
         day_target, test_size = 30, 0.2
         last_close = 2500.0
         prediction = 2600.0
