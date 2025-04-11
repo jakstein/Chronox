@@ -149,12 +149,13 @@ class TestProphetModel:
         mock_adjust.return_value = adjusted_prediction
         
         # Call the function with return_result=True
-        with patch('prophet.Prophet.fit') as mock_fit, patch('pandas.Series.iloc', return_value=last_close), \
-             patch('pandas.Series.diff', return_value=pd.Series([pd.Timedelta(days=1)])):
-            mock_fit.return_value = None
-            result = model.trainProphet(
-                processed_stock_data, ticker, period, interval, day_target, test_size, return_result=True
-            )
+        with patch('prophet.Prophet.fit') as mock_fit:
+            # Patch set_auto_seasonalities directly to avoid the min_dt >= Timedelta comparison issue
+            with patch.object(mock_model, 'set_auto_seasonalities', return_value=None):
+                mock_fit.return_value = None
+                result = model.trainProphet(
+                    processed_stock_data, ticker, period, interval, day_target, test_size, return_result=True
+                )
         
         # Verify result structure
         assert result is not None
