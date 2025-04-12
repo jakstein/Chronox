@@ -507,7 +507,7 @@ if __name__ == "__main__":
     # spróbuj pobrać token z konfiguracji, w razie niepowodzenia użyj zmiennej środowiskowej
     token = discord_config.get('token')
     if not token:
-        token = os.getenv("DISCORD_TOKEN")
+        token = os.getenv("CHRONOX_DISCORD_TOKEN")
         
     if not token:
         print("Ustaw token Discord w pliku config.json lub zmiennej środowiskowej DISCORD_TOKEN")
