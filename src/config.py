@@ -15,7 +15,7 @@ def loadConfig():
     return {
         "mode": "discord",
         "discord": {
-            "token": os.getenv("DISCORD_TOKEN", ""),
+            "token": os.getenv("CHRONOX_DISCORD_TOKEN", ""),
             "command_prefix": "!"
         },
         "default_stock": {

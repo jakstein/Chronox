@@ -26,11 +26,11 @@ if __name__ == "__main__":
     os.makedirs('./data/processed', exist_ok=True)
     os.makedirs('./data/predictions', exist_ok=True)
     
-    # pobierz token z konfiguracji z rezerwą z zmiennych środowiskowych
-    token = config.get('discord', {}).get('token') or os.getenv("DISCORD_TOKEN")
+    # pobierz token z pliku konfiguracyjnego z fallbackiem na zmiennych środowiskowych
+    token = config.get('discord', {}).get('token') or os.getenv("CHRONOX_DISCORD_TOKEN")
         
     if not token:
-        print("Proszę podać token Discorda w pliku config.json lub w zmiennej środowiskowej DISCORD_TOKEN")
+        print("Proszę podać token Discorda w pliku config.json lub w zmiennej środowiskowej CHRONOX_DISCORD_TOKEN")
         sys.exit(1)
     else:
         print("Uruchamianie bota Discord...")

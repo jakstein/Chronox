@@ -495,7 +495,7 @@ async def prune(ctx, count="5"):
 def runDiscordBot(token=None):
     """Uruchom bota Discord z podanym tokenem lub z konfiguracji"""
     if token is None:
-        token = discord_config.get('token', os.getenv("DISCORD_TOKEN"))
+        token = discord_config.get('token', os.getenv("CHRONOX_DISCORD_TOKEN"))
     
     if not token:
         print("Nie znaleziono tokenu Discord w konfiguracji ani zmiennych środowiskowych")
@@ -510,6 +510,6 @@ if __name__ == "__main__":
         token = os.getenv("CHRONOX_DISCORD_TOKEN")
         
     if not token:
-        print("Ustaw token Discord w pliku config.json lub zmiennej środowiskowej DISCORD_TOKEN")
+        print("Ustaw token Discord w pliku config.json lub zmiennej środowiskowej CHRONOX_DISCORD_TOKEN")
     else:
         runDiscordBot(token)
