@@ -79,7 +79,7 @@ class TestArgumentValidation:
         valid, error_msg = config.validateArgs(period, interval, mock_config)
         
         assert valid is False
-        assert "Invalid period" in error_msg
+        assert "Nieprawidłowy okres" in error_msg
         
     def test_invalid_interval(self, mock_config):
         """Test validation with invalid interval"""
@@ -90,7 +90,7 @@ class TestArgumentValidation:
         valid, error_msg = config.validateArgs(period, interval, mock_config)
         
         assert valid is False
-        assert "Invalid interval" in error_msg
+        assert "Nieprawidłowy interwał" in error_msg
         
     def test_incompatible_period_interval(self, mock_config):
         """Test validation with incompatible period-interval combination"""
@@ -100,5 +100,5 @@ class TestArgumentValidation:
         
         valid, error_msg = config.validateArgs(period, interval, mock_config)
         assert valid is False
-        assert "Invalid" in error_msg
-        assert "Allowed intervals are" in error_msg
+        assert "Nieprawidłowy" in error_msg
+        assert "Dozwolone" in error_msg
