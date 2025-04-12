@@ -3,6 +3,8 @@ import pandas, os
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime, timedelta
+import gc
+import shutil
 
 
 def loadData(filePath):
@@ -78,3 +80,27 @@ def generatePredictionChart(data, predictionValue, days_ahead, ticker, period, i
     plt.close()
     
     return chartPath
+
+
+def cleanupMemory(delete_files=False):
+    gc.collect()
+    
+    # zamknij wszystkie otwarte figury matliba 
+    plt.close('all')
+
+    if delete_files:
+        # usuń wszelkie pliki w katalogach data
+        if os.path.exists('./data/raw'):
+            shutil.rmtree('./data/raw')
+        if os.path.exists('./data/processed'):
+            shutil.rmtree('./data/processed')
+        if os.path.exists('./data/predictions'):
+            shutil.rmtree('./data/predictions')
+
+        # zrób nowe katalogi danych
+        os.makedirs('./data/raw', exist_ok=True)
+        os.makedirs('./data/processed', exist_ok=True)
+        os.makedirs('./data/predictions', exist_ok=True)
+        
+    # ponowne czyszczonko
+    gc.collect()

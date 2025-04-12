@@ -63,6 +63,8 @@ async def helpStock(ctx):
    - count: Liczba wiadomości do pobrania (domyślnie: 5)
 
 `!newsEnabled <true/false>` - Włącz analizę wiadomości on/off
+
+`!cleanup [yes/no]` - Wyczyść pamięć i opcjonalnie usuń stare pliki
     """
     await ctx.send(help_text)
 
@@ -491,6 +493,18 @@ async def prune(ctx, count="5"):
         
     except Exception as e:
         await ctx.send(f"Błąd podczas usuwania wiadomości: {str(e)}")
+
+@bot.command(name='cleanup')
+async def cleanup(ctx, delete_files="no"):
+    """Wyczyść pamięć i opcjonalnie usuń stare pliki"""
+    delete = delete_files.lower() in ["yes", "true", "1", "y"]
+    
+    await ctx.send(f"Rozpoczynanie oczyszczania pamięci{' i usuwania plików' if delete else ''}...")
+    
+    # wywołaj funkcję czyszczącą
+    utils.cleanupMemory(delete_files=delete)
+    
+    await ctx.send("Oczyszczanie zakończone powodzeniem! Pamięć została zwolniona.")
 
 def runDiscordBot(token=None):
     """Uruchom bota Discord z podanym tokenem lub z konfiguracji"""
