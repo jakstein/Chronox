@@ -10,7 +10,6 @@
         "interval": "1d"
     },
     "news_sentiment": {
-        "enabled": true,
         "storiesCount": 10,
         "daysLookback": 7,
         "sentiment_impact_weight": 0.5

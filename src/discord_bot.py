@@ -61,6 +61,8 @@ async def helpStock(ctx):
 
 `!news <ticker> [count]` - Uzyskaj najnowsze wiadomości dla akcji
    - count: Liczba wiadomości do pobrania (domyślnie: 5)
+
+`!newsEnabled <true/false>` - Włącz analizę wiadomości on/off
     """
     await ctx.send(help_text)
 
@@ -441,6 +443,22 @@ async def get_news(ctx, ticker=None, count=5):
         await ctx.send(f"Sentyment: {sentiment['positiveRatio']:.2%} Pozytywny | {sentiment['negativeRatio']:.2%} Negatywny | {sentiment['neutralRatio']:.2%} Neutralny\n")
     except Exception as e:
         await ctx.send(f"Błąd podczas pobierania wiadomości: {str(e)}")
+@bot.command(name='newsEnabled')
+async def toggle_news_enabled(ctx, enabled=None):
+    """Włącz analizę wiadomości on/off"""
+    if enabled is None:
+        await ctx.send(f"Analiza wiadomości jest {'włączona' if news.newsEnabled else 'wyłączona'}. Użyj !newsEnabled true/false aby zmienić.")
+        return
+        
+    if enabled.lower() in ['true', '1', 'yes', 'on', 'enable']:
+        news.newsEnabled = True
+        await ctx.send("✅ Analiza wiadomości została włączona.")
+    elif enabled.lower() in ['false', '0', 'no', 'off', 'disable']:
+        news.newsEnabled = False
+        await ctx.send("❌ Analiza wiadomości została wyłączona.")
+    else:
+        await ctx.send("Nieprawidłowa opcja. Użyj true/false, on/off, enable/disable, yes/no, lub 1/0.")
+
 @bot.command(name='prune')
 async def prune(ctx, count="5"):
     try:
