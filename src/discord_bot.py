@@ -507,7 +507,7 @@ if __name__ == "__main__":
     # try grab token from config, fallback to env var if not found
     token = discord_config.get('token')
     if not token:
-        token = os.getenv("DISCORD_TOKEN")
+        token = os.getenv("CHRONOX_DISCORD_TOKEN")
         
     if not token:
         print("Please set a Discord token in config.json or DISCORD_TOKEN environment variable")

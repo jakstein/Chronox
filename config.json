@@ -1,7 +1,7 @@
 {
     "mode": "discord",
     "discord": {
-        "token": "MTM1NzA4ODAyMDEzMzcxMTkxNQ.GlEHxS.bH69og5qhwlyfsHdztgIHKhZfbZyhy5xiJJQu0",
+        "token": "",
         "command_prefix": "!"
     },
     "default_stock": {
