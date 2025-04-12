@@ -22,10 +22,10 @@ if __name__ == "__main__":
     os.makedirs('./data/predictions', exist_ok=True)
     
     # get token from config with fallback to environment
-    token = config.get('discord', {}).get('token') or os.getenv("DISCORD_TOKEN")
+    token = config.get('discord', {}).get('token') or os.getenv("CHRONOX_DISCORD_TOKEN")
         
     if not token:
-        print("Please provide a Discord token in config.json or DISCORD_TOKEN environment variable")
+        print("Please provide a Discord token in config.json or CHRONOX_DISCORD_TOKEN environment variable")
         sys.exit(1)
     else:
         print("Starting Discord bot...")
