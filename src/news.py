@@ -5,6 +5,9 @@ from tickertick import get_feed
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from config import loadConfig
 
+# Global variable to control news sentiment functionality
+newsEnabled = False
+
 def fetch_ticker_news(ticker: str, daysLookback: int = 7, storiesCount: int = 20) -> List[Dict]:
     try:
         # calculate hours ago from daysLookback
@@ -101,7 +104,7 @@ def getSentimentData(ticker: str) -> Tuple[Dict, List[Dict]]:
     config = loadConfig()
     newsConfig = config.get('news_sentiment', {})
     
-    if not newsConfig.get('enabled', False):
+    if not newsEnabled:
         return {
             'compoundAvg': 0,
             'positiveRatio': 0,
@@ -127,7 +130,7 @@ def adjustPredictionWithSentiment(prediction: float, sentimentScore: float, orig
     newsConfig = config.get('news_sentiment', {})
     
     # return original if sentiment is disabled
-    if not newsConfig.get('enabled', False):
+    if not newsEnabled:
         return prediction
     
     weight = weight or newsConfig.get('sentiment_impact_weight', 0.5)

@@ -61,6 +61,8 @@ async def helpStock(ctx):
 
 `!news <ticker> [count]` - Get latest news for a ticker
    - count: Number of news items to fetch (default: 5)
+
+`!newsEnabled <true/false>` - Toggle news sentiment analysis on/off
     """
     await ctx.send(help_text)
 
@@ -440,6 +442,22 @@ async def get_news(ctx, ticker=None, count=5):
         await ctx.send(f"Sentiment: {sentiment['positiveRatio']:.2%} Positive | {sentiment['negativeRatio']:.2%} Negative | {sentiment['neutralRatio']:.2%} Neutral\n")
     except Exception as e:
         await ctx.send(f"Error fetching news: {str(e)}")
+
+@bot.command(name='newsEnabled')
+async def toggle_news_enabled(ctx, enabled=None):
+    """Toggle news sentiment analysis on/off"""
+    if enabled is None:
+        await ctx.send(f"News sentiment analysis is currently {'enabled' if news.newsEnabled else 'disabled'}. Use !newsEnabled true/false to change.")
+        return
+        
+    if enabled.lower() in ['true', '1', 'yes', 'on', 'enable']:
+        news.newsEnabled = True
+        await ctx.send("✅ News sentiment analysis has been enabled.")
+    elif enabled.lower() in ['false', '0', 'no', 'off', 'disable']:
+        news.newsEnabled = False
+        await ctx.send("❌ News sentiment analysis has been disabled.")
+    else:
+        await ctx.send("Invalid option. Please use true/false, on/off, enable/disable, yes/no, or 1/0.")
 
 @bot.command(name='prune')
 async def prune(ctx, count="5"):
