@@ -63,6 +63,8 @@ async def helpStock(ctx):
    - count: Number of news items to fetch (default: 5)
 
 `!newsEnabled <true/false>` - Toggle news sentiment analysis on/off
+
+`!cleanup [yes/no]` - Clean up memory and optionally delete old files to reduce memory usage
     """
     await ctx.send(help_text)
 
@@ -491,6 +493,18 @@ async def prune(ctx, count="5"):
         
     except Exception as e:
         await ctx.send(f"Error pruning messages: {str(e)}")
+
+@bot.command(name='cleanup')
+async def cleanup(ctx, delete_files="no"):
+    """Clean up memory and optionally delete old files to reduce memory usage"""
+    delete = delete_files.lower() in ["yes", "true", "1", "y"]
+    
+    await ctx.send(f"Starting memory cleanup{' and file cleanup' if delete else ''}...")
+    
+    # call the cleanup function
+    utils.cleanupMemory(delete_files=delete)
+    
+    await ctx.send("Collection complete! Memory has been freed.")
 
 def runDiscordBot(token=None):
     """Run the Discord bot with the given token or from config"""
