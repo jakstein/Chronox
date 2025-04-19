@@ -5,6 +5,55 @@ import numpy as np
 from datetime import datetime, timedelta
 import gc
 import shutil
+import json
+
+USERS_FILE = 'users.json' # path to the user preferences file
+
+def loadUserPreferences(userId):
+    try:
+        if not os.path.exists(USERS_FILE):
+            with open(USERS_FILE, 'w') as f:
+                json.dump({}, f) # create empty file if not exists
+            return {}
+        with open(USERS_FILE, 'r') as f:
+            allPrefs = json.load(f)
+            return allPrefs.get(str(userId), {}) # return user's prefs or empty dict
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {} # return empty dict on error
+
+def saveUserPreferences(userId, preferences):
+    try:
+        if not os.path.exists(USERS_FILE):
+             with open(USERS_FILE, 'w') as f:
+                json.dump({}, f) # create file if needed
+
+        with open(USERS_FILE, 'r') as f:
+            try:
+                allPrefs = json.load(f)
+            except json.JSONDecodeError:
+                allPrefs = {} # reset if file is corrupted
+    except FileNotFoundError:
+         allPrefs = {}
+
+    userId_str = str(userId)
+
+    # get existing prefs or start new dict
+    userPrefs = allPrefs.get(userId_str, {})
+    userPrefs.update(preferences)
+
+    # put updated prefs back
+    allPrefs[userId_str] = userPrefs
+
+    try:
+        with open(USERS_FILE, 'w') as f:
+            json.dump(allPrefs, f, indent=4) # save with formatting
+    except IOError as e:
+        print(f"Error saving user preferences: {e}")
+
+
+def getUserPreference(userId, key, default=None):
+    prefs = loadUserPreferences(userId)
+    return prefs.get(key, default)
 
 
 def loadData(filePath):

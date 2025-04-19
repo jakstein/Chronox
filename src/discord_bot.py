@@ -7,6 +7,7 @@ import io
 from PIL import Image
 import ingestion, preprocessing, processing, utils, model, news
 from config import loadConfig, validateArgs
+from utils import getUserPreference, saveUserPreferences
 
 # configure Discord bot based on config
 config = loadConfig()
@@ -38,26 +39,30 @@ async def helpStock(ctx):
 **Chronox Stock Bot Commands**
 `!fetchStock <ticker> [period] [interval]` - Fetch stock data
    - ticker: Stock symbol (e.g., AAPL)
-   - period: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max (default: 1y)
-   - interval: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo (default: 1d)
+   - period: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max (default: 1y or user preference)
+   - interval: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo (default: 1d or user preference)
 
-`!stockChart <ticker> [period] [interval]` - Get stock price chart
+`!stockChart <ticker> [period] [interval]` - Get stock price chart (uses defaults or user preferences)
 
-`!stockFeatures <ticker> [period] [interval]` - Get feature table for stock
+`!stockFeatures <ticker> [period] [interval]` - Get feature table for stock (uses defaults or user preferences)
 
 `!predictXgboost <ticker> [period] [interval] [daysAhead] [test_size] [shuffle]` - Get XGBoost prediction
-   - daysAhead: Days to predict ahead (default: 30)
-   - test_size: Test size ratio (default: 0.2)
+   - daysAhead: Days to predict ahead (default: 30 or user preference)
+   - test_size: Test size ratio (default: 0.2 or user preference)
    - shuffle: Add "shuffle" to randomly shuffle data (default: False)
 
 `!predictLightgbm <ticker> [period] [interval] [daysAhead] [test_size] [shuffle]` - Get LightGBM prediction
-   - daysAhead: Days to predict ahead (default: 30)
-   - test_size: Test size ratio (default: 0.2)
+   - daysAhead: Days to predict ahead (default: 30 or user preference)
+   - test_size: Test size ratio (default: 0.2 or user preference)
    - shuffle: Add "shuffle" to randomly shuffle data (default: False)
 
 `!predictProphet <ticker> [period] [interval] [daysAhead] [test_size]` - Get Prophet prediction
-   - daysAhead: Days to predict ahead (default: 30)
-   - test_size: Test size ratio (default: 0.2)
+   - daysAhead: Days to predict ahead (default: 30 or user preference)
+   - test_size: Test size ratio (default: 0.2 or user preference)
+
+`!prefer <period> <interval> <daysAhead> <test_size>` - Set your default preferences
+   - Example: `!prefer 5y 1h 60 0.1`
+   - Sets period to 5y, interval to 1h, daysAhead to 60, test_size to 0.1
 
 `!news <ticker> [count]` - Get latest news for a ticker
    - count: Number of news items to fetch (default: 5)
@@ -68,12 +73,71 @@ async def helpStock(ctx):
     """
     await ctx.send(help_text)
 
+@bot.command(name='prefer')
+async def prefer(ctx, period: str = None, interval: str = None, daysAhead: str = None, test_size: str = None):
+    """Set user preferences for period, interval, daysAhead, test_size in fixed order."""
+    userId = ctx.author.id
+    preferencesToSave = {}
+    errors = []
+    success = []
+    valid_keys = ['period', 'interval', 'daysAhead', 'test_size']
+    args = [period, interval, daysAhead, test_size]
+
+    # check if all arguments are provided
+    if None in args:
+        await ctx.send(f"Please provide all four preferences in order: `<period> <interval> <daysAhead> <test_size>`.\nExample: `!prefer 1y dh 60 0.1`")
+        return
+
+    # validate period
+    if period not in allowed_periods:
+        errors.append(f"Invalid value for `period`: `{period}`. Allowed: {', '.join(allowed_periods)}")
+    else:
+        preferencesToSave['period'] = period
+        success.append(f"`period` set to `{period}`")
+
+    # validate interval
+    if interval not in allowed_intervals:
+        errors.append(f"Invalid value for `interval`: `{interval}`. Allowed: {', '.join(allowed_intervals)}")
+    else:
+        preferencesToSave['interval'] = interval
+        success.append(f"`interval` set to `{interval}`")
+
+    # validate daysAhead
+    try:
+        prefDaysAhead = int(daysAhead)
+        if prefDaysAhead <= 0: raise ValueError("daysAhead must be positive")
+        preferencesToSave['daysAhead'] = prefDaysAhead
+        success.append(f"`daysAhead` set to `{prefDaysAhead}`")
+    except ValueError as e:
+        errors.append(f"Invalid value for `daysAhead`: `{daysAhead}`. Must be a positive integer. Error: {e}")
+
+    # validate test_size
+    try:
+        prefTestSize = float(test_size)
+        if not (0 < prefTestSize < 1): raise ValueError("test_size must be between 0 and 1 (exclusive)")
+        preferencesToSave['test_size'] = prefTestSize
+        success.append(f"`test_size` set to `{prefTestSize}`")
+    except ValueError as e:
+        errors.append(f"Invalid value for `test_size`: `{test_size}`. Must be a number between 0 and 1. Error: {e}")
+
+    response = ""
+    if not errors and preferencesToSave:
+        saveUserPreferences(userId, preferencesToSave)
+        response += "Preferences updated:\n" + "\n".join(f"- {s}" for s in success) + "\n"
+    elif errors:
+        response += "Errors found, preferences not saved:\n" + "\n".join(f"- {e}" for e in errors)
+    else:
+        response = "An unexpected issue occurred. Preferences not saved."
+
+    await ctx.send(response)
+
 @bot.command(name='fetchStock')
 async def fetchStockCmd(ctx, ticker=None, period=None, interval=None):
     """Fetch stock data for the given ticker"""
-    ticker = ticker or default_ticker
-    period = period or default_period
-    interval = interval or default_interval
+    userId = ctx.author.id
+    ticker = ticker or getUserPreference(userId, 'ticker', default_ticker)
+    period = period or getUserPreference(userId, 'period', default_period)
+    interval = interval or getUserPreference(userId, 'interval', default_interval)
 
     # args validation
     valid, error_msg = validateArgs(period, interval)
@@ -98,9 +162,10 @@ async def fetchStockCmd(ctx, ticker=None, period=None, interval=None):
 @bot.command(name='stockChart')
 async def stockChart(ctx, ticker=None, period=None, interval=None):
     """Send stock chart for the given ticker"""
-    ticker = ticker or default_ticker
-    period = period or default_period
-    interval = interval or default_interval
+    userId = ctx.author.id
+    ticker = ticker or getUserPreference(userId, 'ticker', default_ticker)
+    period = period or getUserPreference(userId, 'period', default_period)
+    interval = interval or getUserPreference(userId, 'interval', default_interval)
 
     # args validation
     valid, error_msg = validateArgs(period, interval)
@@ -121,9 +186,10 @@ async def stockChart(ctx, ticker=None, period=None, interval=None):
 @bot.command(name='stockFeatures')
 async def stockFeatures(ctx, ticker=None, period=None, interval=None):
     """Display feature table for the given stock"""
-    ticker = ticker or default_ticker
-    period = period or default_period
-    interval = interval or default_interval
+    userId = ctx.author.id
+    ticker = ticker or getUserPreference(userId, 'ticker', default_ticker)
+    period = period or getUserPreference(userId, 'period', default_period)
+    interval = interval or getUserPreference(userId, 'interval', default_interval)
 
     # args validation
     valid, error_msg = validateArgs(period, interval)
@@ -171,11 +237,17 @@ async def stockFeatures(ctx, ticker=None, period=None, interval=None):
         await ctx.send(f"Error generating features: {str(e)}")
 
 @bot.command(name='predictXgboost')
-async def predictXgboost(ctx, ticker=None, period=None, interval=None, daysAhead=30, test_size=0.2, shuffle=None):
+async def predictXgboost(ctx, ticker=None, period=None, interval=None, daysAhead=None, test_size=None, shuffle=None):
     """Get XGBoost prediction for the given stock"""
-    ticker = ticker or default_ticker
-    period = period or default_period
-    interval = interval or default_interval
+    userId = ctx.author.id
+    ticker = ticker or getUserPreference(userId, 'ticker', default_ticker)
+    period = period or getUserPreference(userId, 'period', default_period)
+    interval = interval or getUserPreference(userId, 'interval', default_interval)
+    daysAhead_pref = getUserPreference(userId, 'daysAhead', 30)
+    test_size_pref = getUserPreference(userId, 'test_size', 0.2)
+    daysAhead = daysAhead if daysAhead is not None else daysAhead_pref
+    test_size = test_size if test_size is not None else test_size_pref
+
     shuffleData = shuffle == "shuffle"
 
     # args validation
@@ -187,6 +259,8 @@ async def predictXgboost(ctx, ticker=None, period=None, interval=None, daysAhead
     try:
         daysAhead = int(daysAhead)
         test_size = float(test_size)
+        if daysAhead <= 0: raise ValueError("daysAhead must be positive")
+        if not (0 < test_size < 1): raise ValueError("test_size must be between 0 and 1")
 
         await ctx.send(f"Fetching latest {ticker} data...")
         ingestion.fetchStock(ticker, period, interval)
@@ -247,11 +321,17 @@ async def predictXgboost(ctx, ticker=None, period=None, interval=None, daysAhead
         await ctx.send(f"Error making prediction: {str(e)}")
 
 @bot.command(name='predictLightgbm')
-async def predictLightgbm(ctx, ticker=None, period=None, interval=None, daysAhead=30, test_size=0.2, shuffle=None):
+async def predictLightgbm(ctx, ticker=None, period=None, interval=None, daysAhead=None, test_size=None, shuffle=None):
     """Get LightGBM prediction for the given stock"""
-    ticker = ticker or default_ticker
-    period = period or default_period
-    interval = interval or default_interval
+    userId = ctx.author.id
+    ticker = ticker or getUserPreference(userId, 'ticker', default_ticker)
+    period = period or getUserPreference(userId, 'period', default_period)
+    interval = interval or getUserPreference(userId, 'interval', default_interval)
+    daysAhead_pref = getUserPreference(userId, 'daysAhead', 30)
+    test_size_pref = getUserPreference(userId, 'test_size', 0.2)
+    daysAhead = daysAhead if daysAhead is not None else daysAhead_pref
+    test_size = test_size if test_size is not None else test_size_pref
+
     shuffleData = shuffle == "shuffle"
 
     # args validation
@@ -263,6 +343,8 @@ async def predictLightgbm(ctx, ticker=None, period=None, interval=None, daysAhea
     try:
         daysAhead = int(daysAhead)
         test_size = float(test_size)
+        if daysAhead <= 0: raise ValueError("daysAhead must be positive")
+        if not (0 < test_size < 1): raise ValueError("test_size must be between 0 and 1")
         
         await ctx.send(f"Fetching latest {ticker} data...")
         ingestion.fetchStock(ticker, period, interval)
@@ -323,11 +405,16 @@ async def predictLightgbm(ctx, ticker=None, period=None, interval=None, daysAhea
         await ctx.send(f"Error making prediction: {str(e)}")
 
 @bot.command(name='predictProphet')
-async def predictProphet(ctx, ticker=None, period=None, interval=None, daysAhead=30, test_size=0.2):
+async def predictProphet(ctx, ticker=None, period=None, interval=None, daysAhead=None, test_size=None):
     """Get Prophet prediction for the given stock"""
-    ticker = ticker or default_ticker
-    period = period or default_period
-    interval = interval or default_interval
+    userId = ctx.author.id
+    ticker = ticker or getUserPreference(userId, 'ticker', default_ticker)
+    period = period or getUserPreference(userId, 'period', default_period)
+    interval = interval or getUserPreference(userId, 'interval', default_interval)
+    daysAhead_pref = getUserPreference(userId, 'daysAhead', 30)
+    test_size_pref = getUserPreference(userId, 'test_size', 0.2)
+    daysAhead = daysAhead if daysAhead is not None else daysAhead_pref
+    test_size = test_size if test_size is not None else test_size_pref
 
     # args validation
     valid, error_msg = validateArgs(period, interval)
@@ -338,6 +425,8 @@ async def predictProphet(ctx, ticker=None, period=None, interval=None, daysAhead
     try:
         daysAhead = int(daysAhead)
         test_size = float(test_size)
+        if daysAhead <= 0: raise ValueError("daysAhead must be positive")
+        if not (0 < test_size < 1): raise ValueError("test_size must be between 0 and 1")
         
         await ctx.send(f"Fetching latest {ticker} data...")
         ingestion.fetchStock(ticker, period, interval)
@@ -400,7 +489,8 @@ async def predictProphet(ctx, ticker=None, period=None, interval=None, daysAhead
 @bot.command(name='news')
 async def get_news(ctx, ticker=None, count=5):
     """Get the latest news for a ticker"""
-    ticker = ticker or default_ticker
+    userId = ctx.author.id
+    ticker = ticker or getUserPreference(userId, 'ticker', default_ticker)
     try:
         count = int(count)
         
