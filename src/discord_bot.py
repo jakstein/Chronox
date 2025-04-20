@@ -311,6 +311,7 @@ async def predictXgboost(ctx, ticker=None, period=None, interval=None, daysAhead
             ticker=ticker,
             period=period,
             interval=interval,
+            error=result['error'],
             modelName="XGBoost"
         )
         
@@ -395,6 +396,7 @@ async def predictLightgbm(ctx, ticker=None, period=None, interval=None, daysAhea
             ticker=ticker,
             period=period,
             interval=interval,
+            error=result['error'],
             modelName="LightGBM"
         )
         
@@ -477,6 +479,7 @@ async def predictProphet(ctx, ticker=None, period=None, interval=None, daysAhead
             ticker=ticker,
             period=period,
             interval=interval,
+            error=result['error'],
             modelName="Prophet"
         )
         

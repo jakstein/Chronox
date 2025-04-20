@@ -64,7 +64,7 @@ def loadData(filePath):
     return data
 
 
-def generatePredictionChart(data, predictionValue, days_ahead, ticker, period, interval, modelName):
+def generatePredictionChart(data, predictionValue, error, days_ahead, ticker, period, interval, modelName):
     # axos and figure
     plt.figure(figsize=(12, 6))
     
@@ -93,22 +93,55 @@ def generatePredictionChart(data, predictionValue, days_ahead, ticker, period, i
         # default to days if unknown
         futureDate = lastDate + timedelta(days=days_ahead)
     
+    # calculate error bounds
+    upperBound = predictionValue + error
+    lowerBound = predictionValue - error
+    
     # historical
     plt.plot(dates, close_prices, color='blue', label='Historical Close Price')
     
-    # future line
+    # future line for prediction
     plt.plot([lastDate, futureDate], [close_prices.iloc[-1], predictionValue], 
              color='red', linestyle='--', label=f'{modelName} Prediction')
+
+    # ferror bound lines
+    plt.plot([lastDate, futureDate], [close_prices.iloc[-1], upperBound], 
+             color='yellow', linestyle=':', label='Error Range Upper')
+    plt.plot([lastDate, futureDate], [close_prices.iloc[-1], lowerBound], 
+             color='yellow', linestyle=':', label='Error Range Lower')
+
+    # shade the error
+    plt.fill_between([lastDate, futureDate], 
+                     [close_prices.iloc[-1], lowerBound], 
+                     [close_prices.iloc[-1], upperBound], 
+                     color='yellow', alpha=0.2, label='Prediction Uncertainty')
     
-    # predictiomn point marker
-    plt.scatter(futureDate, predictionValue, color='red', s=50)
+    # prediction point marker
+    plt.scatter(futureDate, predictionValue, color='red', s=50, zorder=5) # ensure marker is on top
     
     # annotate predicted value
     plt.annotate(f'${predictionValue:.2f}', 
                  (futureDate, predictionValue),
                  xytext=(10, 0),
                  textcoords='offset points',
-                 fontweight='bold')
+                 fontweight='bold',
+                 va='center') # Adjust vertical alignment
+
+    # annotate error bounds
+    plt.annotate(f'${upperBound:.2f}', 
+                 (futureDate, upperBound),
+                 xytext=(10, 0),
+                 textcoords='offset points',
+                 fontsize=9,
+                 color='gray',
+                 va='bottom')
+    plt.annotate(f'${lowerBound:.2f}', 
+                 (futureDate, lowerBound),
+                 xytext=(10, 0),
+                 textcoords='offset points',
+                 fontsize=9,
+                 color='gray',
+                 va='top')
     
     # title and labels
     plt.title(f"{ticker} Stock Price Prediction ({modelName})")
