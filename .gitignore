@@ -1,0 +1,14 @@
+data/raw/
+data/processed/
+__pycache__
+config.yaml
+data/predictions/
+.vscode
+.coverage
+student2-kubeconfig.yaml
+student2-nginx-deployment.yaml
+docker-compose.yml
+docker-compose-english.yml
+docker-compose-polish.yml
+.env
+users.json

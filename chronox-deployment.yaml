@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chronox-app
+  namespace: student2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chronox
+  template:
+    metadata:
+      labels:
+        app: chronox
+    spec:
+      containers:
+      - name: chronox
+        imagePullPolicy: Always
+        image: docker.io/jakstein/chronox:english
+        # ports:
+        # - containerPort: 80 
+        env:
+        - name: CHRONOX_DISCORD_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: chronox-secrets
+              key: discord-token
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "10m"
+          limits:
+            memory: "450Mi"
+            cpu: "100m"
+---
+apiVersion: v1
+# kind: Service
+# metadata:
+#   name: chronox-service
+#   namespace: student2
+# spec:
+#   selector:
+#     app: chronox
+#   ports:
+#   - port: 80
+#     targetPort: 80
+#   type: ClusterIP
