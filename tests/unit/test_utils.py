@@ -104,6 +104,7 @@ class TestGeneratePredictionChart:
                 utils.generatePredictionChart(
                     data=data,
                     predictionValue=160.0,
+                    error=1.0,
                     days_ahead=days_ahead,
                     ticker="TEST",
                     period="1y",
