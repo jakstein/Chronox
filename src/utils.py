@@ -6,8 +6,8 @@ from datetime import datetime, timedelta
 import gc
 import shutil
 import json
-
-USERS_FILE = 'users.json' # path to the user preferences file
+PERSISTENT_DIR = '/persistent' # path for kubernetes persistent volume
+USERS_FILE = os.path.join(PERSISTENT_DIR, 'users.json') # path to the user preferences file
 
 def loadUserPreferences(userId):
     try:
