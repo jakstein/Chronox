@@ -2,68 +2,101 @@ import pandas, numpy, xgboost, lightgbm
 from sklearn import model_selection as sklS
 from sklearn import metrics as sklM
 import utils
-from prophet import Prophet  
-import news  
+from prophet import Prophet
+import news
 
 
-def trainXGBoost(data, ticker, tperiod, tinterval, dayTarget, testSize, return_result=False, shuffle=False):
-    data = pandas.read_csv(f'./data/processed/{ticker}_{tperiod}_{tinterval}.csv', header=0, parse_dates=True)
-        # get the last closing price
-    lastClose = data["Close"].iloc[-1]  
+def trainXGBoost(
+    data,
+    ticker,
+    tperiod,
+    tinterval,
+    dayTarget,
+    testSize,
+    return_result=False,
+    shuffle=False,
+):
+    data = pandas.read_csv(
+        f"./data/processed/{ticker}_{tperiod}_{tinterval}.csv",
+        header=0,
+        parse_dates=True,
+    )
+    # get the last closing price
+    lastClose = data["Close"].iloc[-1]
 
     if dayTarget > 0:
         data["Target"] = data["Close"].shift(-dayTarget)
-        data = data.dropna(subset=["Target"]) #remove the empty fields from shifted values
+        data = data.dropna(
+            subset=["Target"]
+        )  # remove the empty fields from shifted values
     else:
         data["Target"] = data["Close"]
 
     y = data["Target"]
     x = data.drop(columns=["Price", "Target"])
 
-    XTrain, XTest, YTrain, YTest = sklS.train_test_split(x, y, test_size=testSize, shuffle=shuffle)
+    XTrain, XTest, YTrain, YTest = sklS.train_test_split(
+        x, y, test_size=testSize, shuffle=shuffle
+    )
 
-    xgbModel = xgboost.XGBRegressor(objective="reg:squarederror", learning_rate=0.05, n_estimators=200) #adjust estimators
+    xgbModel = xgboost.XGBRegressor(
+        objective="reg:squarederror", learning_rate=0.05, n_estimators=200
+    )  # adjust estimators
     xgbModel.fit(XTrain, YTrain)
     predXgb = xgbModel.predict(XTest)
     futurefeatures = x.iloc[[-1]]
     futurepred = xgbModel.predict(futurefeatures)[0]
-    
+
     sentimentData, _ = news.getSentimentData(ticker)
-    sentimentScore = sentimentData.get('sentimentScore', 0)
-    
+    sentimentScore = sentimentData.get("sentimentScore", 0)
+
     adjustedPrediction = news.adjustPredictionWithSentiment(
-        prediction=futurepred, 
+        prediction=futurepred,
         sentimentScore=sentimentScore,
         originalPrice=lastClose,
-        daysAhead=dayTarget
+        daysAhead=dayTarget,
     )
-    
+
     error = numpy.sqrt(sklM.mean_squared_error(YTest, predXgb))
     if not return_result:
         print(f"Original prediction: {futurepred}")
         print(f"Sentiment-adjusted prediction: {adjustedPrediction}")
         print("Error:")
         print(error)
-    
+
     if return_result:
         return {
             "ticker": ticker,
             "period": tperiod,
             "interval": tinterval,
             "lastClose": lastClose,
-            "prediction": adjustedPrediction,  
+            "prediction": adjustedPrediction,
             "originalPrediction": futurepred,
             "daysAhead": dayTarget,
             "error": error,
             "sentimentScore": sentimentScore,
-            "sentimentEnabled": sentimentData.get('enabled', False)
+            "sentimentEnabled": sentimentData.get("enabled", False),
         }
 
 
-def trainLightGBM(data, ticker, tperiod, tinterval, dayTarget, testSize, seed=42, return_result=False, shuffle=False):
-    data = pandas.read_csv(f'./data/processed/{ticker}_{tperiod}_{tinterval}.csv', header=0, parse_dates=True)
+def trainLightGBM(
+    data,
+    ticker,
+    tperiod,
+    tinterval,
+    dayTarget,
+    testSize,
+    seed=42,
+    return_result=False,
+    shuffle=False,
+):
+    data = pandas.read_csv(
+        f"./data/processed/{ticker}_{tperiod}_{tinterval}.csv",
+        header=0,
+        parse_dates=True,
+    )
 
-    lastClose = data["Close"].iloc[-1] 
+    lastClose = data["Close"].iloc[-1]
 
     if dayTarget > 0:
         data["Target"] = data["Close"].shift(-dayTarget)
@@ -71,133 +104,154 @@ def trainLightGBM(data, ticker, tperiod, tinterval, dayTarget, testSize, seed=42
     else:
         data["Target"] = data["Close"]
 
-
-
     y = data["Target"]
     x = data.drop(columns=["Price", "Target"])
 
-    XTrain, XTest, YTrain, YTest = sklS.train_test_split(x, y, test_size=testSize, random_state=seed, shuffle=shuffle)
+    XTrain, XTest, YTrain, YTest = sklS.train_test_split(
+        x, y, test_size=testSize, random_state=seed, shuffle=shuffle
+    )
 
-    lgbModel = lightgbm.LGBMRegressor(objective="regression", learning_rate=0.05, n_estimators=200, random_state=seed)
+    lgbModel = lightgbm.LGBMRegressor(
+        objective="regression", learning_rate=0.05, n_estimators=200, random_state=seed
+    )
     lgbModel.fit(XTrain, YTrain)
     predLgb = lgbModel.predict(XTest)
     futurefeatures = x.iloc[[-1]]
     futurepred = lgbModel.predict(futurefeatures)[0]
-    
+
     sentimentData, _ = news.getSentimentData(ticker)
-    sentimentScore = sentimentData.get('sentimentScore', 0)
-    
+    sentimentScore = sentimentData.get("sentimentScore", 0)
+
     # sentiment adjustment
     adjustedPrediction = news.adjustPredictionWithSentiment(
-        prediction=futurepred, 
+        prediction=futurepred,
         sentimentScore=sentimentScore,
         originalPrice=lastClose,
-        daysAhead=dayTarget
+        daysAhead=dayTarget,
     )
-    
+
     error = numpy.sqrt(sklM.mean_squared_error(YTest, predLgb))
     if not return_result:
         print(f"Original prediction: {futurepred}")
         print(f"Sentiment-adjusted prediction: {adjustedPrediction}")
         print("Error:")
         print(error)
-    
+
     if return_result:
         return {
             "ticker": ticker,
             "period": tperiod,
             "interval": tinterval,
             "lastClose": lastClose,
-            "prediction": adjustedPrediction, 
-            "originalPrediction": futurepred,  
+            "prediction": adjustedPrediction,
+            "originalPrediction": futurepred,
             "daysAhead": dayTarget,
             "error": error,
             "sentimentScore": sentimentScore,
-            "sentimentEnabled": sentimentData.get('enabled', False)
+            "sentimentEnabled": sentimentData.get("enabled", False),
         }
 
 
-def trainProphet(data, ticker, tperiod, tinterval, dayTarget, testSize, return_result=False):
-    data = pandas.read_csv(f'./data/processed/{ticker}_{tperiod}_{tinterval}.csv', 
-                           header=0, 
-                           parse_dates=['Price'])
-    
+def trainProphet(
+    data, ticker, tperiod, tinterval, dayTarget, testSize, return_result=False
+):
+    data = pandas.read_csv(
+        f"./data/processed/{ticker}_{tperiod}_{tinterval}.csv",
+        header=0,
+        parse_dates=["Price"],
+    )
+
     # make a copy of the data and rename columns for Prophet
-    prophetData = data[['Price', 'Close']].copy()
-    prophetData.columns = ['ds', 'y']
-    
-    regressorFeatures = ['priceChange', 'ma10', 'ma50', 'ema10', 'ema50', 'macd', 'macdSignal', 
-                         'volitStd1w', 'volitStd1mo', 'bollingerUp', 'bollingerDown', 
-                         'volma10', 'timeFeature', 'RSI']
-    
+    prophetData = data[["Price", "Close"]].copy()
+    prophetData.columns = ["ds", "y"]
+
+    regressorFeatures = [
+        "priceChange",
+        "ma10",
+        "ma50",
+        "ema10",
+        "ema50",
+        "macd",
+        "macdSignal",
+        "volitStd1w",
+        "volitStd1mo",
+        "bollingerUp",
+        "bollingerDown",
+        "volma10",
+        "timeFeature",
+        "RSI",
+    ]
+
     # add regressors
     for feature in regressorFeatures:
         if feature in data.columns:
             prophetData[feature] = data[feature]
-    
+
     # training/testing splits
     trainSize = int(len(prophetData) * (1 - testSize))
     trainData = prophetData.iloc[:trainSize]
     testData = prophetData.iloc[trainSize:]
-    
+
     # Train Prophet model with regressors
     model = Prophet()
-    
+
     # each feature is a regressor
     for feature in regressorFeatures:
-        if feature in prophetData.columns and feature not in ['ds', 'y']:
+        if feature in prophetData.columns and feature not in ["ds", "y"]:
             model.add_regressor(feature)
-    
+
     model.fit(trainData)
-      # make predictions for test period and beyond
+    # make predictions for test period and beyond
     future = model.make_future_dataframe(periods=len(testData) + dayTarget)
-    
+
     # copy regressor values to future dataframe for prediction
     for feature in regressorFeatures:
-        if feature in prophetData.columns and feature not in ['ds', 'y']:
+        if feature in prophetData.columns and feature not in ["ds", "y"]:
             future[feature] = pandas.Series(prophetData[feature].values)
             # for forecasting horizon, use the last value for each regressor
-            future.loc[len(prophetData):, feature] = prophetData[feature].iloc[-1]
-    
+            future.loc[len(prophetData) :, feature] = prophetData[feature].iloc[-1]
+
     forecast = model.predict(future)
-    
+
     # error calc
-    test_predictions = forecast.iloc[trainSize:trainSize+len(testData)]['yhat'].values
-    test_actuals = testData['y'].values
+    test_predictions = forecast.iloc[trainSize : trainSize + len(testData)][
+        "yhat"
+    ].values
+    test_actuals = testData["y"].values
     error = numpy.sqrt(sklM.mean_squared_error(test_actuals, test_predictions))
-    
+
     # get future prediction
-    futurepred = forecast['yhat'].iloc[-1]
-    
+    futurepred = forecast["yhat"].iloc[-1]
+
     sentimentData, _ = news.getSentimentData(ticker)
-    sentimentScore = sentimentData.get('sentimentScore', 0)
+    sentimentScore = sentimentData.get("sentimentScore", 0)
 
     lastClose = data["Close"].iloc[-1]
-    
+
     # sentiment adjustment
     adjustedPrediction = news.adjustPredictionWithSentiment(
-        prediction=futurepred, 
+        prediction=futurepred,
         sentimentScore=sentimentScore,
         originalPrice=lastClose,
-        daysAhead=dayTarget
+        daysAhead=dayTarget,
     )
-    
+
     if not return_result:
         print(f"Original prediction: {futurepred}")
         print(f"Sentiment-adjusted prediction: {adjustedPrediction}")
         print("Error:")
         print(error)
-    
+
     if return_result:
         return {
             "ticker": ticker,
             "period": tperiod,
             "interval": tinterval,
             "lastClose": lastClose,
-            "prediction": adjustedPrediction,  
-            "originalPrediction": futurepred,  
+            "prediction": adjustedPrediction,
+            "originalPrediction": futurepred,
             "daysAhead": dayTarget,
             "error": error,
             "sentimentScore": sentimentScore,
-            "sentimentEnabled": sentimentData.get('enabled', False)
+            "sentimentEnabled": sentimentData.get("enabled", False),
         }
