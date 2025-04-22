@@ -78,6 +78,16 @@ async def helpStock(ctx):
     await ctx.send(help_text)
 
 
+@bot.command(name="allowedargs")
+async def allowedargs(ctx):
+    """Show allowed arguments for periods and intervals"""
+    allowedText = f"""
+    Allowed periods: {", ".join(allowed_periods)}
+    Allowed intervals: {", ".join(allowed_intervals)}
+    """
+    await ctx.send(allowedText)
+
+
 @bot.command(name="prefer")
 async def prefer(
     ctx,
