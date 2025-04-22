@@ -17,8 +17,6 @@ spec:
       - name: chronox
         imagePullPolicy: Always
         image: docker.io/jakstein/chronox:english
-        # ports:
-        # - containerPort: 80 
         env:
         - name: CHRONOX_DISCORD_TOKEN
           valueFrom:
@@ -32,8 +30,30 @@ spec:
           limits:
             memory: "450Mi"
             cpu: "100m"
+        volumeMounts:
+        - name: chronox-persistent-storage
+          mountPath: /persistent
+      # persistent volume claim
+      volumes:
+      - name: chronox-persistent-storage
+        persistentVolumeClaim:
+          claimName: chronox-pvc
+
 ---
 apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: chronox-pvc 
+  namespace: student2
+spec:
+  accessModes:
+    - ReadWriteOnce 
+  resources:
+    requests:
+      storage: 50Mi
+
+# --- Service definition commented out ---
+# apiVersion: v1
 # kind: Service
 # metadata:
 #   name: chronox-service
