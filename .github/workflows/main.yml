@@ -121,15 +121,17 @@ jobs:
     - name: Deploy to Kubernetes
       if: steps.deploy_op.outputs.operation == 'Reinstall' || steps.deploy_op.outputs.operation == 'Install'
       run: |
+        echo "Applying Kubernetes manifests from chronox-deployment.yaml..."
+        kubectl apply -f chronox-deployment.yaml -n student2
 
-        # TODO swap for helm
-        image: ${{ secrets.DOCKERHUB_USERNAME }}/chronox:english
-        echo "Applying Kubernetes manifests..."
-        kubectl apply -f chronox-deployment.yaml
-        kubectl rollout restart deployment/chronox-app
+        echo "Setting deployment image to ${{ secrets.DOCKERHUB_USERNAME }}/chronox:${{ github.sha }}"
+        kubectl set image deployment/chronox-app chronox=${{ secrets.DOCKERHUB_USERNAME }}/chronox:${{ github.sha }} -n student2
 
-    - name: Uninstall from Kubernetes (Example)
+        echo "Waiting for deployment rollout to finish..."
+        kubectl rollout status deployment/chronox-app -n student2 --timeout=240s
+
+    - name: Uninstall from Kubernetes
       if: steps.deploy_op.outputs.operation == 'Uninstall' || steps.deploy_op.outputs.operation == 'Reinstall'
       run: |
-        echo "Deleting Kubernetes resources..."
-        kubectl delete -f kubernetes/deployment.yaml --ignore-not-found=true
+        echo "Deleting Kubernetes resources from chronox-deployment.yaml..."
+        kubectl delete -f chronox-deployment.yaml --ignore-not-found=true -n student2
