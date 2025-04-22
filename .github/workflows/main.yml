@@ -131,7 +131,7 @@ jobs:
         kubectl rollout status deployment/chronox-app -n student2 --timeout=240s
 
     - name: Uninstall from Kubernetes
-      if: steps.deploy_op.outputs.operation == 'Uninstall' || steps.deploy_op.outputs.operation == 'Reinstall'
+      if: steps.deploy_op.outputs.operation == 'Uninstall'
       run: |
         echo "Deleting Kubernetes resources from chronox-deployment.yaml..."
         kubectl delete -f chronox-deployment.yaml --ignore-not-found=true -n student2
