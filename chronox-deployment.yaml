@@ -46,12 +46,26 @@ metadata:
   name: chronox-pvc 
   namespace: student2
 spec:
+  storageClassName: ""
   accessModes:
     - ReadWriteOnce 
   resources:
     requests:
       storage: 50Mi
-
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: chronox-pv
+spec:
+  capacity:
+    storage: 50Mi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /mnt/data/chronox
+    type: DirectoryOrCreate
 # --- Service definition commented out ---
 # apiVersion: v1
 # kind: Service
